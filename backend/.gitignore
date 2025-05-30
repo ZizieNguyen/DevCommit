@@ -1,0 +1,11 @@
+# Archivos y carpetas a ignorar
+node_modules/
+.env
+
+# Ignorar contenido de uploads excepto .gitkeep
+uploads/*
+!uploads/.gitkeep
+
+# Ignorar contenido de logs excepto .gitkeep
+logs/*
+!logs/.gitkeep
