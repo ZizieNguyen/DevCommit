@@ -1,37 +1,40 @@
-import React from 'react';
 
-export const Badge = ({ 
-  children, 
-  variant = 'primary', 
-  className = '',
-  ...props 
-}) => {
-  // Mapa de variantes a clases
-  const variantClasses = {
-    primary: 'bg-primary/10 text-primary',
-    secondary: 'bg-secondary/10 text-secondary',
-    accent: 'bg-accent/10 text-accent',
-    warning: 'bg-yellow-500/10 text-yellow-700',
-    danger: 'bg-red-500/10 text-red-700',
-    success: 'bg-green-500/10 text-green-700',
-    // Colores para categorías
-    'categoria-1': 'bg-categoria-1/10 text-categoria-1',
-    'categoria-2': 'bg-categoria-2/10 text-categoria-2',
-    'categoria-3': 'bg-categoria-3/10 text-categoria-3',
-    'categoria-4': 'bg-categoria-4/10 text-categoria-4',
-    'categoria-5': 'bg-categoria-5/10 text-categoria-5',
+export const Badge = ({ categoria }) => {
+  const getStyles = (cat) => {
+    const catLower = cat?.toLowerCase() || '';
+    
+    // Objeto con los estilos por categoría
+    const styles = {
+      frontend: { bg: 'bg-categoria-frontend bg-opacity-10', text: 'text-categoria-frontend' },
+      backend: { bg: 'bg-categoria-backend bg-opacity-10', text: 'text-categoria-backend' },
+      javascript: { bg: 'bg-categoria-javascript bg-opacity-10', text: 'text-categoria-javascript' },
+      php: { bg: 'bg-categoria-php bg-opacity-10', text: 'text-categoria-php' },
+      ux: { bg: 'bg-categoria-ux bg-opacity-10', text: 'text-categoria-ux' },
+      wordpress: { bg: 'bg-categoria-wordpress bg-opacity-10', text: 'text-categoria-wordpress' },
+      react: { bg: 'bg-categoria-react bg-opacity-10', text: 'text-categoria-react' },
+      vue: { bg: 'bg-categoria-vue bg-opacity-10', text: 'text-categoria-vue' },
+      devops: { bg: 'bg-categoria-devops bg-opacity-10', text: 'text-categoria-devops' },
+      default: { bg: 'bg-primary bg-opacity-10', text: 'text-primary' }
+    };
+    
+    // Buscar la categoría que coincida
+    for (const key in styles) {
+      if (catLower.includes(key)) {
+        return styles[key];
+      }
+    }
+    
+    return styles.default;
   };
-
+  
+  const { bg, text } = getStyles(categoria);
+  
   return (
-    <span 
-      className={`
-        inline-block text-sm font-medium px-2 py-1 rounded-full
-        ${variantClasses[variant] || variantClasses.primary}
-        ${className}
-      `}
-      {...props}
-    >
-      {children}
+    <span className={`categoria-badge ${bg} ${text}`}>
+      {categoria}
     </span>
   );
 };
+
+
+export default Badge;

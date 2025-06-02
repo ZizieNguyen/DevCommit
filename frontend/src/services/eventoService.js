@@ -1,47 +1,94 @@
 import { api } from './api';
 
+/**
+ * Servicio para gestionar las operaciones relacionadas con eventos
+ */
 export const eventoService = {
-  getEventos: async (filtros = {}) => {
-    // Construir query params
-    const queryParams = new URLSearchParams();
-    Object.entries(filtros).forEach(([key, value]) => {
-      if (value !== null && value !== undefined) {
-        queryParams.append(key, value);
-      }
-    });
-    
-    const queryString = queryParams.toString() ? `?${queryParams.toString()}` : '';
-    return await api.get(`/eventos${queryString}`);
+  /**
+   * Obtiene un listado de eventos con opciones de filtrado
+   * @param {Object} params - Parámetros de consulta (limite, pagina, categoria, etc)
+   */
+  getEventos: async (params = {}) => {
+    const respuesta = await api.get('/eventos', params);
+    return respuesta;
   },
   
+  /**
+   * Obtiene un evento específico por su ID
+   * @param {number|string} id - ID del evento
+   */
   getEventoPorId: async (id) => {
-    return await api.get(`/eventos/${id}`);
+    const respuesta = await api.get(`/eventos/${id}`);
+    return respuesta;
   },
   
-  getCategorias: async () => {
-    return await api.get('/categorias');
+  /**
+   * Obtiene eventos destacados para mostrar en la página principal
+   * @param {number} limite - Cantidad máxima de eventos a retornar
+   */
+  getEventosDestacados: async (limite = 6) => {
+    return await eventoService.getEventos({ destacado: true, limite });
   },
   
-  // Obtener eventos del usuario autenticado
-  getEventosUsuario: async () => {
-    return await api.get('/usuarios/eventos');
+  /**
+   * Obtiene eventos por categoría
+   * @param {string|number} categoriaId - ID de la categoría
+   * @param {Object} params - Parámetros adicionales
+   */
+  getEventosPorCategoria: async (categoriaId, params = {}) => {
+    return await eventoService.getEventos({ 
+      categoria: categoriaId,
+      ...params
+    });
   },
   
-  // Registrar un usuario a un evento
-  registrarAsistencia: async (eventoId) => {
-    try {
-      return await api.post(`/eventos/${eventoId}/registros`);
-    } catch (error) {
-      // Si hay un error específico del backend, muéstralo
-      if (error.response && error.response.data && error.response.data.mensaje) {
-        throw new Error(error.response.data.mensaje);
-      }
-      throw new Error('No se pudo registrar al evento');
-    }
+  /**
+   * Busca eventos que coincidan con un término de búsqueda
+   * @param {string} termino - Término de búsqueda
+   */
+  buscarEventos: async (termino) => {
+    return await eventoService.getEventos({ q: termino });
   },
-
-  // Cancelar registro a un evento
-  cancelarAsistencia: async (eventoId) => {
-    return await api.delete(`/eventos/${eventoId}/registros`);
+  
+  /**
+   * Crea un nuevo evento
+   * @param {Object} eventoData - Datos del evento a crear
+   */
+  crearEvento: async (eventoData) => {
+    return await api.post('/eventos', eventoData);
+  },
+  
+  /**
+   * Actualiza un evento existente
+   * @param {number|string} id - ID del evento a actualizar
+   * @param {Object} eventoData - Datos actualizados del evento
+   */
+  actualizarEvento: async (id, eventoData) => {
+    return await api.put(`/eventos/${id}`, eventoData);
+  },
+  
+  /**
+   * Elimina un evento
+   * @param {number|string} id - ID del evento a eliminar
+   */
+  eliminarEvento: async (id) => {
+    return await api.delete(`/eventos/${id}`);
+  },
+  
+  /**
+   * Sube una imagen para un evento
+   * @param {number|string} id - ID del evento
+   * @param {FormData} formData - Formulario con la imagen a subir
+   */
+  subirImagenEvento: async (id, formData) => {
+    return await api.upload(`/eventos/${id}/imagen`, formData);
+  },
+  
+  /**
+   * Obtiene los horarios disponibles para eventos
+   */
+  getHorarios: async () => {
+    const respuesta = await api.get('/eventos/horarios');
+    return respuesta;
   }
 };

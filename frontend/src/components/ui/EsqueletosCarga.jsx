@@ -36,11 +36,21 @@ export const EventoDetailSkeleton = () => {
           <div className="h-4 w-full bg-gray-300 rounded"></div>
           <div className="h-4 w-3/4 bg-gray-300 rounded"></div>
         </div>
-        <div className="bg-gray-200 p-4 rounded-lg space-y-3">
-          <div className="h-6 w-1/3 bg-gray-300 rounded"></div>
-          <div className="h-4 w-1/2 bg-gray-300 rounded"></div>
-          <div className="h-4 w-3/5 bg-gray-300 rounded"></div>
-          <div className="h-10 w-full bg-gray-300 rounded-lg mt-4"></div>
+        <div className="grid md:grid-cols-3 gap-6">
+          <div className="col-span-2 space-y-4">
+            <div className="h-6 w-36 bg-gray-300 rounded"></div>
+            <div className="space-y-3">
+              <div className="h-4 w-full bg-gray-300 rounded"></div>
+              <div className="h-4 w-full bg-gray-300 rounded"></div>
+              <div className="h-4 w-3/4 bg-gray-300 rounded"></div>
+            </div>
+          </div>
+          <div className="bg-gray-200 p-4 rounded-lg space-y-3">
+            <div className="h-6 w-1/3 bg-gray-300 rounded"></div>
+            <div className="h-4 w-1/2 bg-gray-300 rounded"></div>
+            <div className="h-4 w-3/5 bg-gray-300 rounded"></div>
+            <div className="h-10 w-full bg-gray-300 rounded-lg mt-4"></div>
+          </div>
         </div>
       </div>
     </div>

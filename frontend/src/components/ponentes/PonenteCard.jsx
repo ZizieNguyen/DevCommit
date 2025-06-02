@@ -1,37 +1,42 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Card } from '../ui/Card';
 
 export const PonenteCard = ({ ponente }) => {
+  const { id, nombre, apellido, imagen, tags } = ponente;
+
   return (
-    <Card hover className="h-full flex flex-col text-center">
-      {/* Imagen */}
-      {ponente.imagen ? (
-        <img 
-          src={ponente.imagen}
-          alt={ponente.nombre}
-          className="w-full h-48 object-cover rounded-t-lg"
-        />
-      ) : (
-        <div className="w-full h-48 bg-gray-200 flex items-center justify-center rounded-t-lg">
-          <span className="text-gray-500">Sin imagen</span>
-        </div>
-      )}
+    <div className="ponente bg-white shadow-md rounded-lg overflow-hidden transition-transform hover:-translate-y-1 hover:shadow-lg">
+      <img 
+        src={imagen || '/img/speaker_default.jpg'} 
+        alt={`Imagen ponente ${nombre} ${apellido}`}
+        className="w-full object-cover h-64" 
+      />
       
-      {/* Contenido */}
-      <div className="p-6 flex flex-col flex-grow">
-        <h3 className="text-xl font-bold mb-2">{ponente.nombre}</h3>
+      <div className="p-5">
+        <h3 className="text-xl font-bold mb-1">
+          {nombre} {apellido}
+        </h3>
         
-        <p className="text-gray-600 mb-4">
-          {ponente.especialidad || 'Especialista en tecnología'}
-        </p>
-        
-        <div className="mt-auto">
-          <Link to={`/ponentes/${ponente.id}`} className="text-primary hover:underline">
-            Ver perfil completo
-          </Link>
+        <div className="flex flex-wrap gap-2 mb-4">
+          {tags?.map((tag, index) => (
+            <span 
+              key={index} 
+              className="bg-primary bg-opacity-10 text-primary text-xs py-1 px-2 rounded-full"
+            >
+              {tag}
+            </span>
+          ))}
         </div>
+
+        <Link 
+          to={`/ponentes/${id}`} 
+          className="block w-full text-center bg-primary text-white py-2 font-bold uppercase rounded hover:bg-primary-dark transition-colors"
+        >
+          Conocer Más
+        </Link>
       </div>
-    </Card>
+    </div>
   );
 };
+
+export default PonenteCard;
