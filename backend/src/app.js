@@ -16,7 +16,12 @@ const __dirname = dirname(__filename);
 const app = express();
 
 // Middleware
-app.use(cors({ origin: FRONTEND_URL}));
+app.use(cors({
+  origin: FRONTEND_URL.replace(/\/$/, ''),
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(join(__dirname, '../uploads')));

@@ -3,67 +3,69 @@ import { api } from './api';
 /**
  * Servicio para manejar la autenticación y operaciones relacionadas con usuarios
  */
-export const authService = {
+const authService = {
   /**
    * Inicia sesión del usuario
-   * @param {Object} credentials - Credenciales (email, password)
+   * @param {Object} datos - Credenciales (email, password)
    */
-  login: async (credentials) => {
-    return await api.post('/auth/login', credentials);
+  login: (datos) => {
+    return api.post('/auth/login', datos);
   },
 
   /**
    * Cierra la sesión del usuario actual
    */
-  logout: async () => {
-    return await api.post('/auth/logout');
+  logout: () => {
+    return api.post('/auth/logout');
   },
 
   /**
    * Registra un nuevo usuario
-   * @param {Object} userData - Datos del nuevo usuario
+   * @param {Object} datos - Datos del nuevo usuario
    */
-  register: async (userData) => {
-    return await api.post('/auth/registro', userData);
+  registro: (datos) => {
+    return api.post('/auth/registro', datos);
   },
 
   /**
    * Confirma el registro de un usuario mediante token
    * @param {string} token - Token de confirmación
    */
-  confirmarRegistro: async (token) => {
-    return await api.get(`/auth/confirmar/${token}`);
+  confirmarRegistro: (token) => {
+    return api.get(`/auth/confirmar/${token}`);
   },
 
   /**
    * Solicita un correo para restablecer contraseña
-   * @param {Object} data - Objeto con el email
+   * @param {Object} datos - Objeto con el email
    */
-  solicitarResetPassword: async (data) => {
-    return await api.post('/auth/olvide-password', data);
+  solicitarResetPassword: (datos) => {
+    return api.post('/auth/olvide-password', datos);
   },
 
   /**
    * Comprueba si un token de reset es válido
    * @param {string} token - Token de reset
    */
-  comprobarToken: async (token) => {
-    return await api.get(`/auth/olvide-password/${token}`);
+  comprobarToken: (token) => {
+    return api.get(`/auth/olvide-password/${token}`);
   },
 
   /**
    * Establece una nueva contraseña
    * @param {string} token - Token de validación
-   * @param {Object} data - Nueva contraseña
+   * @param {Object} datos - Nueva contraseña
    */
-  nuevaPassword: async (token, data) => {
-    return await api.post(`/auth/olvide-password/${token}`, data);
+  nuevaPassword: (token, datos) => {
+    return api.post(`/auth/olvide-password/${token}`, datos);
   },
 
   /**
    * Obtiene el perfil del usuario autenticado
    */
-  getPerfil: async () => {
-    return await api.get('/auth/perfil');
+  obtenerPerfil: () => {
+    return api.get('/auth/perfil');
   }
 };
+
+export { authService };

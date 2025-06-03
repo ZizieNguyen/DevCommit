@@ -11,6 +11,7 @@ import * as horariosController from './horariosController.js';
 import * as pagosController from './pagosController.js';
 import * as mapasController from './mapasController.js';
 import * as regalosController from './regalosController.js';
+import * as adminController from './adminController.js';
 
 export {
   usuariosController,
@@ -22,5 +23,6 @@ export {
   horariosController,
   pagosController,
   mapasController,
-  regalosController
+  regalosController,
+  adminController
 };

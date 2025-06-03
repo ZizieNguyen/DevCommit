@@ -65,32 +65,33 @@ const confirmar = async (req, res) => {
 };
 
 const login = async (req, res) => {
-  const { email, password } = req.body;
-  
   try {
-    // Autenticar usuario mediante el servicio
-    const usuario = await usuarioService.autenticar(email, password);
+    const { email, password } = req.body;
     
-    // Generar JWT incluyendo admin
-    const token = generarJWT(usuario.id, Boolean(usuario.admin));
+    // Verificar el usuario
+    const usuario = await usuarioService.verificarCredenciales(email, password);
     
-    // Devolver respuesta
+    // Generar JWT
+    const token = generarJWT(usuario);
+    
+    // Importante: no incluir información sensible
     res.json({
       resultado: true,
-      token,
+      msg: 'Login exitoso',
       usuario: {
         id: usuario.id,
         nombre: usuario.nombre,
         apellido: usuario.apellido,
         email: usuario.email,
-        admin: Boolean(usuario.admin)
-      }
+        admin: !!usuario.admin // Asegura que sea booleano
+      },
+      token
     });
   } catch (error) {
-    console.error(error);
-    res.status(error.status || 500).json({ 
+    console.error('Error en login:', error);
+    res.status(error.status || 403).json({
       resultado: false,
-      msg: error.message || 'Hubo un error al iniciar sesión' 
+      msg: error.message || 'Credenciales incorrectas'
     });
   }
 };

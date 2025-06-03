@@ -1,66 +1,79 @@
-// src/middlewares/authMiddleware.js
 import jwt from 'jsonwebtoken';
-import { JWT_SECRET } from '../constants.js';
-import usuarioService from '../services/usuarioService.js';
 import { generarError } from '../utils/helpers.js';
+import usuarioService from '../services/usuarioService.js';
 
+// Middleware para proteger rutas que requieren autenticación
 export const protegerRuta = async (req, res, next) => {
   try {
-    // Verificar que hay token
-    let token;
-    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-      token = req.headers.authorization.split(' ')[1];
+    // Verificar que exista el token en los headers
+    const authHeader = req.headers.authorization;
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.log('No se encontró token o formato incorrecto:', authHeader);
+      return res.status(401).json({
+        resultado: false,
+        msg: 'No autorizado - Token no proporcionado o formato incorrecto'
+      });
     }
+    
+    // Extraer el token y eliminamos espacios adicionales
+    const token = authHeader.split(' ')[1].trim();
     
     if (!token) {
-      throw generarError(401, 'AuthError', 'No hay token en la petición');
+      console.log('Token vacío después de procesar');
+      return res.status(401).json({
+        resultado: false,
+        msg: 'No autorizado - Token vacío'
+      });
     }
     
-    try {
-      // Verificar el token
-      const decoded = jwt.verify(token, JWT_SECRET);
-      
-      // Buscar el usuario
-      const [usuarios] = await pool.query(
-        'SELECT id, nombre, apellido, email, admin FROM usuarios WHERE id = ?',
-        [decoded.id]
-      );
-      
-      if (!usuarios.length) {
-        throw generarError(401, 'AuthError', 'Token no válido - usuario no existe');
-      }
-      
-      // Añadir el usuario a la request
-      req.usuario = {
-        ...usuarios[0],
-        admin: Boolean(usuarios[0].admin) // Asegurar que sea booleano
-      };
-      
-      next();
-    } catch (error) {
-      throw generarError(401, 'AuthError', 'Token no válido');
-    }
-  } catch (error) {
-    res.status(error.status || 401).json({
-      resultado: false,
-      msg: error.message || 'No autorizado'
-    });
-  }
-};
-
-export const esAdmin = (req, res, next) => {
-  try {
-    if (!req.usuario) {
-      throw generarError(500, 'AuthError', 'Se quiere verificar el rol sin validar el token primero');
+    // Verificar el token con la clave secreta correcta
+    const decodificado = jwt.verify(token, process.env.JWT_SECRET);
+    
+    // Buscar el usuario
+    const usuario = await usuarioService.buscarPorId(decodificado.id);
+    
+    // Verificar que el usuario existe y está confirmado
+    if (!usuario) {
+      console.log('Usuario no encontrado:', decodificado.id);
+      return res.status(401).json({
+        resultado: false,
+        msg: 'No autorizado - Usuario no encontrado'
+      });
     }
     
-    if (!req.usuario.admin) {
-      throw generarError(403, 'ForbiddenError', 'No tienes permisos de administrador');
+    if (!usuario.confirmado) {
+      console.log('Usuario no confirmado:', decodificado.id);
+      return res.status(401).json({
+        resultado: false,
+        msg: 'No autorizado - Cuenta no confirmada'
+      });
     }
     
+    // Agregar el usuario al request para uso posterior
+    req.usuario = usuario;
+    
+    // Continuar con la siguiente función
     next();
   } catch (error) {
-    console.error('Error en middleware de admin:', error);
-    res.status(error.status || 500).json({ msg: error.message || 'Error de servidor' });
+    console.error('Error detallado en autenticación:', error);
+    
+    // Diferentes mensajes según el tipo de error
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({
+        resultado: false,
+        msg: 'Token inválido'
+      });
+    } else if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({
+        resultado: false,
+        msg: 'Sesión expirada'
+      });
+    }
+    
+    return res.status(401).json({
+      resultado: false,
+      msg: 'No autorizado'
+    });
   }
 };

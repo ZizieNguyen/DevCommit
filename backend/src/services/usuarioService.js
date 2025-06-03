@@ -171,6 +171,16 @@ const usuarioService = {
         } catch (error) {
             throw error;
         }
+    },
+
+    async contarUsuarios() {
+        try {
+            const [result] = await pool.query('SELECT COUNT(*) as total FROM usuarios');
+            return result[0].total;
+        } catch (error) {
+            console.error('Error al contar usuarios:', error);
+            throw generarError(500, 'DatabaseError', 'Error al contar usuarios');
+        }
     }
 };
 

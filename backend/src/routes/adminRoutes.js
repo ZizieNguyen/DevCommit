@@ -1,5 +1,22 @@
 import express from 'express';
-import { eventosController, ponentesController, registrosController, usuariosController } from '../controllers/index.js';
+import { 
+  listarEventosAdmin 
+} from '../controllers/eventosController.js';
+import { 
+  listarPonentesAdmin 
+} from '../controllers/ponentesController.js';
+import { 
+  obtenerRegistrosAdmin 
+} from '../controllers/registrosController.js';
+import { 
+  listarUsuarios, 
+  cambiarRolAdmin 
+} from '../controllers/usuariosController.js';
+import {
+  obtenerDashboardStats,
+  obtenerRegistrosRecientes,
+  obtenerEventosProximos
+} from '../controllers/adminController.js';
 import { protegerRuta, esAdmin } from '../middlewares/authMiddleware.js';
 
 const router = express.Router();
@@ -8,18 +25,16 @@ const router = express.Router();
 router.use(protegerRuta);
 router.use(esAdmin);
 
+// Rutas de administración
+router.get('/usuarios', listarUsuarios);
+router.get('/eventos', listarEventosAdmin);
+router.get('/ponentes', listarPonentesAdmin);
+router.get('/registros', obtenerRegistrosAdmin);
+router.patch('/usuarios/:id/admin', cambiarRolAdmin);
 
-router.get('/usuarios', usuariosController.listarUsuarios);
-
-// Otras rutas de administrador
-router.get('/eventos', eventosController.listarEventos);
-router.get('/ponentes', ponentesController.listarPonentes);
-router.get('/registros', registrosController.listarRegistros);
-
-// Actualizar estatus admin de un usuario
-router.patch('/usuarios/:id/admin', usuariosController.cambiarRolAdmin);
-
-// Rutas para estadísticas
-router.get('/estadisticas', registrosController.obtenerEstadisticas);
+// Rutas específicas del dashboard
+router.get('/estadisticas', obtenerDashboardStats);
+router.get('/registros/ultimos', obtenerRegistrosRecientes);
+router.get('/eventos/proximos', obtenerEventosProximos);
 
 export default router;

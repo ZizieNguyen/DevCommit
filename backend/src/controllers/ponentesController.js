@@ -7,9 +7,17 @@ import ponenteService from '../services/ponenteService.js';
 /**
  * Obtener todos los ponentes
  */
-const listarPonentes = async (req, res) => { // Cambiado de obtenerPonentes a listarPonentes
+const listarPonentes = async (req, res) => {
   try {
-    const ponentes = await ponenteService.listarPonentes();
+    // Extraer parámetros de consulta
+    const { limite } = req.query;
+    
+    // Crear objeto de filtros
+    const filtros = {};
+    if (limite) filtros.limite = limite;
+    
+    // Usar el servicio con los filtros
+    const ponentes = await ponenteService.listarPonentes(filtros);
     
     res.json({
       resultado: true,
@@ -146,10 +154,44 @@ const eliminarPonente = async (req, res) => {
   }
 };
 
+const listarPonentesAdmin = async (req, res) => {
+  try {
+    // Valores por defecto para administración
+    const pagina = parseInt(req.query.pagina) || 1;
+    const limite = parseInt(req.query.limite) || 10;
+    const busqueda = req.query.busqueda || '';
+    
+    // Incluir información adicional para admins
+    const resultado = await ponenteService.listarPonentesAdmin({ 
+      pagina, 
+      limite,
+      busqueda
+    });
+    
+    res.json({
+      resultado: true,
+      ponentes: resultado.ponentes,
+      paginacion: {
+        pagina: resultado.pagina,
+        limite: resultado.limite,
+        total: resultado.total,
+        totalPaginas: resultado.totalPaginas
+      }
+    });
+  } catch (error) {
+    console.error('Error al obtener ponentes para administración:', error);
+    res.status(error.status || 500).json({
+      resultado: false,
+      msg: error.message || 'Error al obtener ponentes para administración'
+    });
+  }
+};
+
 export {
   listarPonentes,
   obtenerPonente,
   crearPonente,
   actualizarPonente,
-  eliminarPonente
+  eliminarPonente,
+  listarPonentesAdmin
 };

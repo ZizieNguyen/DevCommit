@@ -5,6 +5,7 @@ import { PonenteCard } from "../../components/ponentes/PonenteCard";
 import { eventoService } from "../../services/eventoService";
 import { api } from "../../services/api";
 import { Spinner } from "../../components/ui/Spinner";
+import { FaCalendarAlt, FaCode, FaUsers, FaMicrophone, FaLaptopCode, FaUserFriends } from 'react-icons/fa';
 
 export const HomePage = () => {
   const [eventosDestacados, setEventosDestacados] = useState([]);
@@ -23,15 +24,12 @@ export const HomePage = () => {
       try {
         setLoading(true);
         
-        // Usando el servicio de eventos para eventos destacados
         const respuestaEventos = await eventoService.getEventosDestacados(3);
         setEventosDestacados(respuestaEventos.eventos || []);
         
-        // Obtener ponentes destacados (los primeros 4)
         const respuestaPonentes = await api.get('/ponentes', { limite: 4 });
         setPonentes(respuestaPonentes.ponentes || []);
         
-        // Obtener estadísticas
         const respuestaStats = await api.get('/registros/estadisticas');
         setStats(respuestaStats.estadisticas || {
           eventos: 54,
@@ -54,141 +52,144 @@ export const HomePage = () => {
 
   return (
     <>
-      {/* Hero Section - Video */}
-      <section className="w-full h-[50rem] relative">
-        <div className="absolute inset-0 bg-black opacity-70 z-10"></div>
-        <video
-          className="w-full h-full object-cover"
-          autoPlay
-          muted
-          loop
-          playsInline
-        >
-          <source src="/video/video.mp4" type="video/mp4" />
-          Tu navegador no soporta video HTML5.
-        </video>
+      
 
-        <div className="absolute inset-0 z-20 flex flex-col justify-center items-center text-white px-4">
-          <h2 className="text-5xl sm:text-6xl font-black mb-4 text-center">
-            &#60;Dev<span className="text-primary">Commit</span>&#62; 2023
+      {/* Sección Sobre DevCommit */}
+      <section className="sobre-devcommit">
+        <div className="contenedor">
+          <h2 className="titulo titulo--light">
+            &#60;DevCommit&#62; - <span>La Conferencia para Desarrolladores</span>
           </h2>
-          <p className="text-2xl sm:text-3xl font-bold mb-6 text-center">
-            Octubre 5-6 - Ciudad de México
-          </p>
-          <Link 
-            to="/registro" 
-            className="bg-secondary hover:bg-secondary-dark transition-colors text-white text-xl font-bold px-10 py-4 uppercase rounded-md"
-          >
-            Comprar Pase
-          </Link>
+          
+          <div className="sobre-devcommit__grid">
+            <div className="sobre-devcommit__imagen">
+              <img src="/img/conferencia.jpg" alt="Sobre DevCommit" />
+            </div>
+            
+            <div>
+              <p className="sobre-devcommit__texto">
+                DevCommit es el evento más importante para desarrolladores web y móvil en España. 
+                Reunimos a los mejores expertos del sector para compartir conocimientos, inspirar y crear 
+                conexiones valiosas en la comunidad tecnológica europea.
+              </p>
+              
+              <p className="sobre-devcommit__texto">
+                Durante dos días intensivos, podrás asistir a conferencias magistrales, talleres prácticos 
+                y sesiones de networking que te ayudarán a impulsar tu carrera y mantenerte actualizado con 
+                las últimas tendencias del desarrollo.
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* Sección de características */}
-      <section className="py-20 bg-white">
-        <div className="container mx-auto px-4">
-          <h2 className="text-4xl font-black text-center mb-14">
-            <span className="text-primary">DevCommit</span> - La Conferencia para Desarrolladores
-          </h2>
+      {/* Características */}
+      <section className="caracteristicas">
+        <div className="contenedor">
+          <h2 className="titulo">¿Por qué asistir a <span>DevCommit</span>?</h2>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-            <div className="flex flex-col items-center text-center">
-              <img 
-                src="/img/icono_talleres.png" 
-                alt="Talleres" 
-                className="h-28 w-28 mb-5"
-              />
-              <h3 className="text-2xl font-bold uppercase mb-3">Talleres & Workshops</h3>
-              <p className="text-lg">Aprende con talleres prácticos impartidos por expertos en desarrollo que están creando el futuro de la web.</p>
+          <div className="caracteristicas__grid">
+            <div className="caracteristica">
+              <div className="caracteristica__imagen">
+                {/* Opción 1: Imagen */}
+                <img src="/img/icono_talleres.png" alt="Icono Talleres" />
+                
+                {/* Opción 2: Icono de React Icons */}
+                {/* <FaLaptopCode size={80} className="text-primary" /> */}
+              </div>
+              <h3 className="caracteristica__titulo">Talleres & Workshops</h3>
+              <p>Aprende con talleres prácticos impartidos por expertos en desarrollo que están creando el futuro de la web.</p>
             </div>
 
-            <div className="flex flex-col items-center text-center">
-              <img 
-                src="/img/icono_conferencias.png" 
-                alt="Conferencias" 
-                className="h-28 w-28 mb-5"
-              />
-              <h3 className="text-2xl font-bold uppercase mb-3">Conferencias</h3>
-              <p className="text-lg">Asiste a las conferencias de nuestros expertos internacionales sobre las últimas tendencias en desarrollo.</p>
+            <div className="caracteristica">
+              <div className="caracteristica__imagen">
+                {/* Opción 1: Imagen */}
+                <img src="/img/icono_conferencias.png" alt="Icono Conferencias" />
+                
+                {/* Opción 2: Icono de React Icons */}
+                {/* <FaMicrophone size={80} className="text-primary" /> */}
+              </div>
+              <h3 className="caracteristica__titulo">Conferencias</h3>
+              <p>Asiste a las conferencias de nuestros expertos internacionales sobre las últimas tendencias en desarrollo.</p>
             </div>
 
-            <div className="flex flex-col items-center text-center">
-              <img 
-                src="/img/icono_networking.png" 
-                alt="Networking" 
-                className="h-28 w-28 mb-5"
-              />
-              <h3 className="text-2xl font-bold uppercase mb-3">Networking</h3>
-              <p className="text-lg">Conoce a otros desarrolladores y expande tu red de contactos en los eventos sociales que organizamos.</p>
+            <div className="caracteristica">
+              <div className="caracteristica__imagen">
+                {/* Opción 1: Imagen */}
+                <img src="/img/icono_networking.png" alt="Icono Networking" />
+                
+                {/* Opción 2: Icono de React Icons */}
+                {/* <FaUserFriends size={80} className="text-primary" /> */}
+              </div>
+              <h3 className="caracteristica__titulo">Networking</h3>
+              <p>Conoce a otros desarrolladores y expande tu red de contactos en los eventos sociales que organizamos.</p>
             </div>
           </div>
         </div>
       </section>
       
       {/* Estadísticas */}
-      <section className="py-14 bg-primary">
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            <div className="flex flex-col items-center">
-              <p className="text-5xl sm:text-6xl text-white font-black">{stats.eventos || 0}</p>
-              <p className="text-xl text-white uppercase">Eventos</p>
+      <section className="numeros">
+        <div className="contenedor">
+          <div className="numeros__grid">
+            <div className="numero">
+              <FaCalendarAlt className="numero__icono" />
+              <p className="numero__cantidad">{stats.eventos}</p>
+              <p className="numero__texto">Eventos</p>
             </div>
-            <div className="flex flex-col items-center">
-              <p className="text-5xl sm:text-6xl text-white font-black">{stats.categorias || 0}</p>
-              <p className="text-xl text-white uppercase">Categorías</p>
+            <div className="numero">
+              <FaCode className="numero__icono" />
+              <p className="numero__cantidad">{stats.categorias}</p>
+              <p className="numero__texto">Categorías</p>
             </div>
-            <div className="flex flex-col items-center">
-              <p className="text-5xl sm:text-6xl text-white font-black">{stats.ponentes || 0}</p>
-              <p className="text-xl text-white uppercase">Ponentes</p>
+            <div className="numero">
+              <FaMicrophone className="numero__icono" />
+              <p className="numero__cantidad">{stats.ponentes}</p>
+              <p className="numero__texto">Ponentes</p>
             </div>
-            <div className="flex flex-col items-center">
-              <p className="text-5xl sm:text-6xl text-white font-black">{stats.asistentes || 0}</p>
-              <p className="text-xl text-white uppercase">Asistentes</p>
+            <div className="numero">
+              <FaUsers className="numero__icono" />
+              <p className="numero__cantidad">{stats.asistentes}</p>
+              <p className="numero__texto">Asistentes</p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Eventos destacados */}
-      <section className="py-20 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <h2 className="text-4xl font-black text-center mb-4">
-            Próximos <span className="text-primary">Eventos</span>
-          </h2>
-          <p className="text-xl text-center max-w-3xl mx-auto mb-14">
+      <section className="eventos">
+        <div className="contenedor">
+          <h2 className="titulo">Próximos <span>Eventos</span></h2>
+          <p className="descripcion-pagina">
             Descubre los workshops y conferencias impartidos por expertos que están transformando la industria
           </p>
 
           {error && (
-            <div className="bg-red-50 p-4 rounded-lg text-red-700 text-center mb-8">
+            <div className="alerta alerta--error">
               {error}
             </div>
           )}
 
           {loading ? (
-            <div className="flex justify-center">
+            <div className="texto-center mb-5">
               <Spinner />
             </div>
           ) : eventosDestacados.length > 0 ? (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="eventos__grid">
               {eventosDestacados.map(evento => (
-                <EventoCard 
-                  key={evento.id} 
-                  evento={evento} 
-                />
+                <div key={evento.id} className="evento-card">
+                  <EventoCard evento={evento} />
+                </div>
               ))}
             </div>
           ) : (
-            <p className="text-center text-gray-500 py-12">
+            <p className="texto-center">
               No hay eventos próximos disponibles en este momento.
             </p>
           )}
 
-          <div className="mt-12 text-center">
-            <Link 
-              to="/eventos" 
-              className="inline-block bg-primary hover:bg-primary-dark transition-colors text-white text-xl font-bold px-10 py-3 uppercase rounded"
-            >
+          <div className="texto-center mt-5">
+            <Link to="/eventos" className="boton">
               Ver Todos los Eventos
             </Link>
           </div>
@@ -196,39 +197,33 @@ export const HomePage = () => {
       </section>
 
       {/* Ponentes destacados */}
-      <section className="py-20 bg-white">
-        <div className="container mx-auto px-4">
-          <h2 className="text-4xl font-black text-center mb-4">
-            Nuestros <span className="text-primary">Ponentes</span>
-          </h2>
-          <p className="text-xl text-center max-w-3xl mx-auto mb-14">
+      <section className="ponentes">
+        <div className="contenedor">
+          <h2 className="titulo">Nuestros <span>Ponentes</span></h2>
+          <p className="descripcion-pagina">
             Conoce a los expertos de la industria que compartirán sus conocimientos en DevCommit
           </p>
 
           {loading ? (
-            <div className="flex justify-center">
+            <div className="texto-center mb-5">
               <Spinner />
             </div>
           ) : ponentes.length > 0 ? (
-            <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+            <div className="ponentes__grid">
               {ponentes.map(ponente => (
-                <PonenteCard 
-                  key={ponente.id} 
-                  ponente={ponente} 
-                />
+                <div key={ponente.id} className="ponente-card">
+                  <PonenteCard ponente={ponente} />
+                </div>
               ))}
             </div>
           ) : (
-            <p className="text-center text-gray-500 py-12">
+            <p className="texto-center">
               No hay ponentes disponibles en este momento.
             </p>
           )}
 
-          <div className="mt-12 text-center">
-            <Link 
-              to="/ponentes" 
-              className="inline-block bg-primary hover:bg-primary-dark transition-colors text-white text-xl font-bold px-10 py-3 uppercase rounded"
-            >
+          <div className="texto-center mt-5">
+            <Link to="/ponentes" className="boton">
               Ver Todos los Ponentes
             </Link>
           </div>
@@ -236,39 +231,55 @@ export const HomePage = () => {
       </section>
 
       {/* Mapa del evento */}
-      <section className="h-[40rem] relative">
-        <h2 className="text-4xl font-black text-center py-10 bg-gray-50">
-          Ubicación del <span className="text-primary">Evento</span>
+      <section className="mapa">
+        <h2 className="mapa__titulo">
+          Ubicación del <span>Evento</span>
         </h2>
         
-        <div className="absolute inset-0 z-0" style={{ marginTop: '5rem' }}>
-          <iframe 
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15050.027596382851!2d-99.16869049236784!3d19.427023619959393!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x85d1ff35f5bd1563%3A0x6c366f0e2de02ff7!2sEl%20%C3%81ngel%20de%20la%20Independencia!5e0!3m2!1ses-419!2smx!4v1654547597540!5m2!1ses-419!2smx" 
-            className="w-full h-full border-0" 
-            allowFullScreen 
-            loading="lazy" 
-            title="Ubicación del evento"
-            referrerPolicy="no-referrer-when-downgrade">
-          </iframe>
-        </div>
+        <iframe 
+          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d12159.055672171031!2d-3.7027189887493075!3d40.41679334470141!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xd42287d6da3df9f%3A0x5a3c45114b3a75f7!2sPuerta%20del%20Sol%2C%20Madrid!5e0!3m2!1ses!2ses!4v1654547597540!5m2!1ses!2ses" 
+          width="100%" 
+          height="100%" 
+          style={{ border: 0 }} 
+          allowFullScreen 
+          loading="lazy" 
+          title="Ubicación del evento"
+          referrerPolicy="no-referrer-when-downgrade">
+        </iframe>
       </section>
 
-      {/* Llamada a la acción */}
-      <section className="py-16 bg-primary">
-        <div className="container mx-auto px-4">
-          <h2 className="text-center text-white text-3xl md:text-4xl font-black mb-4">
-            Precios especiales por tiempo limitado
+      {/* Boletos */}
+      <section className="boletos">
+        <div className="contenedor">
+          <h2 className="titulo titulo--blanco">
+            Boletos & Precios
           </h2>
-          <p className="text-center text-white text-xl max-w-2xl mx-auto mb-10">
-            Los precios suben conforme se acerca el evento. ¡No te quedes sin tu boleto para DevCommit 2023!
+          <p className="descripcion-pagina texto-white">
+            Precios para DevCommit - Disponibles por tiempo limitado
           </p>
-          <div className="text-center">
-            <Link 
-              to="/paquetes" 
-              className="inline-block bg-secondary hover:bg-secondary-dark transition-colors text-white text-xl font-bold px-10 py-3 uppercase rounded"
-            >
-              Ver Paquetes Disponibles
-            </Link>
+          
+          <div className="boletos__grid">
+            <div className="boleto boleto--presencial">
+              <h4 className="boleto__logo">&#60;DevCommit/&#62;</h4>
+              <p className="boleto__plan">Presencial</p>
+              <p className="boleto__precio">€199</p>
+              <div className="texto-center">
+                <Link to="/paquetes" className="boton">
+                  Comprar Pase
+                </Link>
+              </div>
+            </div>
+
+            <div className="boleto boleto--virtual">
+              <h4 className="boleto__logo">&#60;DevCommit/&#62;</h4>
+              <p className="boleto__plan">Virtual</p>
+              <p className="boleto__precio">€49</p>
+              <div className="texto-center">
+                <Link to="/paquetes" className="boton">
+                  Comprar Pase
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </section>

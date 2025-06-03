@@ -1,29 +1,26 @@
 import express from 'express';
-import {
-    listarEventos,
-    obtenerEvento,
-    crearEvento,
-    actualizarEvento,
-    eliminarEvento,
-    filtrarEventos
+import { 
+  listarEventos, 
+  obtenerEvento,
+  crearEvento,
+  actualizarEvento,
+  eliminarEvento,
+  filtrarEventos,
+  listarEventosAdmin 
 } from '../controllers/eventosController.js';
 import { protegerRuta, esAdmin } from '../middlewares/authMiddleware.js';
-import { validar } from '../middlewares/validationMiddleware.js';
-import { eventos } from '../utils/validations.js';
 
 const router = express.Router();
 
 // Rutas públicas
-router.get('/', listarEventos);
-router.get('/filtrar', filtrarEventos);
-router.get('/:id', obtenerEvento);
+router.get('/', listarEventos); // Lista paginada para frontend público
+router.get('/filtrar', filtrarEventos); // Filtrar con paginación
+router.get('/:id', obtenerEvento); // Detalle de un evento
 
-// Rutas protegidas (solo admin)
-router.use(protegerRuta);
-router.use(esAdmin);
-
-router.post('/', [validar(eventos.crear), crearEvento]);
-router.put('/:id', [validar(eventos.actualizar), actualizarEvento]);
-router.delete('/:id', eliminarEvento);
+// Rutas protegidas para administradores
+router.get('/admin', protegerRuta, esAdmin, listarEventosAdmin); // Nuevo endpoint para admin con paginación
+router.post('/', protegerRuta, esAdmin, crearEvento);
+router.put('/:id', protegerRuta, esAdmin, actualizarEvento);
+router.delete('/:id', protegerRuta, esAdmin, eliminarEvento);
 
 export default router;

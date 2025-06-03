@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { api } from '../../services/api';
 import { Spinner } from '../../components/ui/Spinner';
 import { Alerta } from '../../components/ui/Alerta';
-import { formatFecha } from '../../utils/formatters';
+import { formatearFecha } from '../../utils/dateUtils';
 
 export default function PonenteDetailPage() {
   const { id } = useParams();
@@ -218,7 +218,7 @@ export default function PonenteDetailPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
                     <span>
-                      {formatFecha(evento.dia.fecha)} - {evento.hora}
+                      {formatearFecha(evento.dia.fecha)} - {evento.hora}
                     </span>
                   </div>
                   

@@ -1,23 +1,24 @@
-import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { Spinner } from '../ui/Spinner';
 
-export default function ProtectedRoute({ children, adminOnly = true }) {
+export default function ProtectedRoute({ children }) {
   const { auth, cargando } = useAuth();
   
-  if (cargando) return <Spinner />;
+  if (cargando) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <Spinner />
+        <p className="ml-2">Cargando...</p>
+      </div>
+    );
+  }
   
-  // Si no está autenticado, redirigir a login
+  // Si no hay usuario autenticado, redirigir a login
   if (!auth?.id) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/login" replace />;
   }
   
-  // Si se requiere ser admin y no lo es, redirigir a home
-  if (adminOnly && !auth.admin) {
-    return <Navigate to="/" />;
-  }
-  
-  // Si está autenticado y cumple los requisitos, mostrar los hijos
+  // Si hay usuario autenticado, mostrar los children
   return children;
 }

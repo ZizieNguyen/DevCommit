@@ -4,7 +4,7 @@ import { api } from '../../services/api';
 import { useAuth } from '../../hooks/useAuth';
 import { Spinner } from '../../components/ui/Spinner';
 import { Alerta } from '../../components/ui/Alerta';
-import { formatFecha } from '../../utils/formatters';
+import { formatearFecha } from "../../utils/dateUtils";
 
 export default function ConfirmarEventoPage() {
   const { tipo, id } = useParams();
@@ -131,7 +131,7 @@ export default function ConfirmarEventoPage() {
           
           <div>
             <h3 className="font-bold">Fecha y hora:</h3>
-            <p>{formatFecha(evento.dia.fecha)} a las {evento.hora}</p>
+            <p>{formatearFecha(evento.dia.fecha)} a las {evento.hora}</p>
           </div>
           
           <div>

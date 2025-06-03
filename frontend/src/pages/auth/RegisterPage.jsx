@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from "../../hooks/useAuth";
 import { Alerta } from '../../components/ui/Alerta';
@@ -10,7 +10,7 @@ export default function RegisterPage() {
   const [repetirPassword, setRepetirPassword] = useState('');
   const [alerta, setAlerta] = useState({});
   
-  const { registrarUsuario, auth } = useAuth();
+  const { registro, auth } = useAuth();
   const navigate = useNavigate();
   
   // Si el usuario ya está autenticado, redirigir
@@ -51,19 +51,19 @@ export default function RegisterPage() {
     setAlerta({});
     
     // Registrar usuario
-    const resultado = await registrarUsuario({ nombre, email, password });
+    const resultado = await registro({ nombre, email, password });
     
     if (resultado.error) {
       setAlerta({
         tipo: 'error',
-        mensaje: resultado.msg
+        mensaje: resultado.mensaje
       });
       return;
     }
     
     // Mostrar mensaje de éxito
     setAlerta({
-      tipo: 'success',
+      tipo: 'exito',
       mensaje: 'Cuenta creada correctamente. Revisa tu email para confirmar tu cuenta.'
     });
     
@@ -75,100 +75,101 @@ export default function RegisterPage() {
   };
   
   return (
-    <div className="container mx-auto px-4 py-12">
-      <div className="max-w-md mx-auto bg-white p-6 rounded-lg shadow-lg">
-        <h1 className="text-3xl font-bold text-center mb-6 text-gray-800">Crear Cuenta</h1>
-        
+    <div className="auth">
+      <h1 className="auth__heading">Crear Cuenta</h1>
+      <p className="auth__texto">Regístrate en DevCommit</p>
+
+      <div className="auth__formulario">
         {alerta.mensaje && (
           <Alerta 
-            mensaje={alerta.mensaje}
             tipo={alerta.tipo}
+            mensaje={alerta.mensaje}
           />
         )}
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
+
+        <form 
+          onSubmit={handleSubmit}
+          className="formulario"
+        >
+          <div className="formulario__campo">
             <label 
               htmlFor="nombre"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="formulario__label"
             >
               Nombre
             </label>
             <input 
               id="nombre"
               type="text"
-              placeholder="Tu nombre"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+              placeholder="Tu Nombre"
+              className="formulario__input"
               value={nombre}
               onChange={e => setNombre(e.target.value)}
             />
           </div>
           
-          <div>
+          <div className="formulario__campo">
             <label 
               htmlFor="email"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="formulario__label"
             >
               Email
             </label>
             <input 
               id="email"
               type="email"
-              placeholder="Tu email"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+              placeholder="Tu Email"
+              className="formulario__input"
               value={email}
               onChange={e => setEmail(e.target.value)}
             />
           </div>
           
-          <div>
+          <div className="formulario__campo">
             <label 
               htmlFor="password"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="formulario__label"
             >
               Contraseña
             </label>
             <input 
               id="password"
               type="password"
-              placeholder="Tu contraseña"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+              placeholder="Tu Contraseña"
+              className="formulario__input"
               value={password}
               onChange={e => setPassword(e.target.value)}
             />
           </div>
           
-          <div>
+          <div className="formulario__campo">
             <label 
               htmlFor="repetir-password"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="formulario__label"
             >
               Repetir Contraseña
             </label>
             <input 
               id="repetir-password"
               type="password"
-              placeholder="Repite tu contraseña"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+              placeholder="Repite tu Contraseña"
+              className="formulario__input"
               value={repetirPassword}
               onChange={e => setRepetirPassword(e.target.value)}
             />
           </div>
-          
-          <div>
-            <button 
-              type="submit"
-              className="w-full bg-primary hover:bg-primary-dark text-white font-bold py-3 px-4 rounded-md transition-colors"
-            >
-              Crear Cuenta
-            </button>
-          </div>
+
+          <input 
+            type="submit" 
+            value="Crear Cuenta" 
+            className="formulario__submit"
+          />
         </form>
-        
-        <div className="mt-6 text-center">
+
+        <div className="acciones">
           <Link 
             to="/login"
-            className="text-sm text-primary hover:text-primary-dark"
+            className="acciones__enlace"
           >
             ¿Ya tienes una cuenta? Inicia sesión
           </Link>

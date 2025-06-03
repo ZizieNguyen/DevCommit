@@ -6,11 +6,11 @@ const Footer = () => {
   const año = new Date().getFullYear();
 
   return (
-    <footer className="footer">
+    <footer className="footer mt-auto">
       <div className="footer__grid">
         <div className="footer__contenido">
           <h3 className="footer__logo">
-            &#60;Dev<span className="footer__logo--bold">Commit</span>/&#62;
+            <span className="footer__logo--bold">&#60;DevCommit/&#62;</span>
           </h3>
 
           <p className="footer__texto">

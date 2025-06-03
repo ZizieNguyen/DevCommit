@@ -1,83 +1,81 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Button } from '../../components/ui/Button';
-import { authService } from '../../services/authService';
+import { useAuth } from '../../hooks/useAuth';
+import { Alerta } from '../../components/ui/Alerta';
+import { Spinner } from '../../components/ui/Spinner';
 
-const ConfirmarRegistroPage = () => {
+export default function ConfirmarRegistroPage() {
+  const [cargando, setCargando] = useState(true);
+  const [alerta, setAlerta] = useState({});
+  
   const { token } = useParams();
-  const [estado, setEstado] = useState({
-    cargando: true,
-    error: null,
-    confirmado: false
-  });
-
+  const { confirmarCuenta } = useAuth();
+  
   useEffect(() => {
-    const confirmarToken = async () => {
-      if (!token) {
-        setEstado({
-          cargando: false,
-          error: 'No se proporcionó un token de confirmación',
-          confirmado: false
+    const confirmar = async () => {
+      if(!token) {
+        setAlerta({
+          tipo: 'error',
+          mensaje: 'Token no válido'
         });
+        setCargando(false);
         return;
       }
-
+      
       try {
-        // Llamada al API para confirmar el registro
-        await authService.confirmarRegistro(token);
+        // En WebDevCamp, se usa el resultado para el mensaje
+        const { mensaje } = await confirmarCuenta(token);
         
-        setEstado({
-          cargando: false,
-          error: null,
-          confirmado: true
+        setAlerta({
+          tipo: 'exito',
+          mensaje: mensaje || 'Cuenta confirmada correctamente. Ya puedes iniciar sesión.'
         });
       } catch (error) {
-        setEstado({
-          cargando: false,
-          error: error.message || 'Error al confirmar el registro',
-          confirmado: false
+        // Extraer el mensaje de error del objeto
+        const mensaje = error.response?.data?.mensaje || 
+                       'El token no es válido o ya ha expirado';
+        
+        setAlerta({
+          tipo: 'error',
+          mensaje
         });
+      } finally {
+        setCargando(false);
       }
     };
-
-    confirmarToken();
-  }, [token]);
-
-  if (estado.cargando) {
-    return (
-      <div className="container mx-auto px-4 py-16 text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary mx-auto"></div>
-        <p className="mt-4">Verificando tu cuenta...</p>
-      </div>
-    );
-  }
-
+    
+    confirmar();
+  }, [token, confirmarCuenta]);
+  
   return (
-    <div className="container mx-auto px-4 py-16 text-center">
-      {estado.confirmado ? (
-        <div>
-          <h1 className="text-3xl font-bold text-green-600 mb-4">¡Registro confirmado!</h1>
-          <p className="text-xl mb-8">Tu cuenta ha sido verificada correctamente.</p>
-          <Link to="/login">
-            <Button variant="primary">Iniciar sesión</Button>
-          </Link>
-        </div>
-      ) : (
-        <div>
-          <h1 className="text-3xl font-bold text-red-600 mb-4">Error de confirmación</h1>
-          <p className="text-xl mb-8">{estado.error || 'No se pudo confirmar el registro'}</p>
-          <div className="flex flex-col gap-4 items-center">
-            <Link to="/registro">
-              <Button variant="outline">Volver al registro</Button>
-            </Link>
-            <Link to="/">
-              <Button variant="primary">Ir al inicio</Button>
+    <div className="auth">
+      <h1 className="auth__heading">Confirma tu cuenta</h1>
+      <p className="auth__texto">Confirma tu cuenta en DevCommit</p>
+
+      <div className="auth__formulario">
+        {cargando ? (
+          <div className="formulario__spinner-center">
+            <Spinner />
+            <p>Comprobando token...</p>
+          </div>
+        ) : (
+          <Alerta 
+            tipo={alerta.tipo}
+            mensaje={alerta.mensaje}
+          />
+        )}
+
+        {!cargando && alerta.tipo === 'exito' && (
+          <div className="acciones acciones--centrar">
+            <Link 
+              to="/login"
+              className="acciones__enlace"
+            >
+              Iniciar Sesión
             </Link>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
-};
-
-export default ConfirmarRegistroPage;
+}

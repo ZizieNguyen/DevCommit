@@ -1,32 +1,24 @@
 import express from 'express';
-import {
-    listarRegistros,
-    obtenerRegistro,
-    obtenerRegistroPorToken,
-    misRegistros,
-    crearRegistro,
-    actualizarPago,
-    eliminarRegistro
+import { 
+  crearRegistro, 
+  obtenerMisRegistros,
+  obtenerRegistrosAdmin, // Función con paginación
+  obtenerRegistroPorId,
+  actualizarRegistro,
+  eliminarRegistro 
 } from '../controllers/registrosController.js';
 import { protegerRuta, esAdmin } from '../middlewares/authMiddleware.js';
-import { validar } from '../middlewares/validationMiddleware.js';
-import { registros } from '../utils/validations.js';
 
 const router = express.Router();
 
-// Rutas que requieren autenticación
-router.use(protegerRuta);
-
 // Rutas para usuarios autenticados
-router.get('/mis-registros', misRegistros);
-router.post('/', [validar(registros.crear), crearRegistro]);
-router.get('/token/:token', obtenerRegistroPorToken);
+router.get('/mis-registros', protegerRuta, obtenerMisRegistros);
+router.post('/', protegerRuta, crearRegistro);
 
-// Rutas solo para administradores
-router.use(esAdmin);
-router.get('/', listarRegistros);
-router.get('/:id', obtenerRegistro);
-router.patch('/:id/pago', [validar(registros.actualizarPago), actualizarPago]);
-router.delete('/:id', eliminarRegistro);
+// Rutas para administradores
+router.get('/admin', protegerRuta, esAdmin, obtenerRegistrosAdmin); // Endpoint admin con paginación
+router.get('/:id', protegerRuta, esAdmin, obtenerRegistroPorId);
+router.put('/:id', protegerRuta, esAdmin, actualizarRegistro);
+router.delete('/:id', protegerRuta, esAdmin, eliminarRegistro);
 
 export default router;

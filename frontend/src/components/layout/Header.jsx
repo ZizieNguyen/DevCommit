@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { FaBars } from 'react-icons/fa';
+import { IoMdClose } from 'react-icons/io';
 
 export default function Header() {
   const { auth, logout } = useAuth();
@@ -137,21 +139,19 @@ export default function Header() {
 
       {/* Botón menú móvil */}
       <div className="menu-mobile">
-        <img 
-          src="/img/menu.svg" 
-          alt="icono menu responsive" 
+        <FaBars 
           className={`menu-mobile__icono ${menuMobile ? 'hidden' : 'block'}`}
           onClick={() => setMenuMobile(true)}
+          aria-label="Abrir menú"
         />
       </div>
 
       {/* Menú móvil */}
       <div className={`menu-mobile__contenedor ${menuMobile ? 'menu-mobile--visible' : ''}`}>
-        <img 
-          src="/img/cerrar.svg" 
-          alt="icono cerrar menú" 
+        <IoMdClose 
           className="menu-mobile__cerrar"
           onClick={() => setMenuMobile(false)}
+          aria-label="Cerrar menú"
         />
 
         <nav className="menu-mobile__nav">
