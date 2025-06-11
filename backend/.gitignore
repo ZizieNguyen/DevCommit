@@ -1,0 +1,22 @@
+# Archivos de entorno
+.env
+
+# Carpeta de dependencias
+/vendor
+
+# Carpetas de caché
+/cache
+
+# Archivos de configuración local
+/config/*.local.php
+
+# Archivos temporales
+/tmp
+/temp
+
+# Archivos de logs
+/logs/*.log
+
+# Archivos subidos por usuarios (si aplica)
+/public/uploads/*
+!/public/uploads/.gitkeep
