@@ -126,7 +126,7 @@ class ActiveRecord {
 
     // Paginar los registros
     public static function paginar($por_pagina, $offset) {
-        $query = "SELECT * FROM " . static::$tabla . " ORDER BY id DESC LIMIT {$por_pagina} OFFSET {$offset} " ;
+        $query = "SELECT * FROM " . static::$tabla . " ORDER BY id ASC LIMIT {$por_pagina} OFFSET {$offset} " ;
         $resultado = self::consultarSQL($query);
         return $resultado;
     }

@@ -41,7 +41,7 @@ export default function Header() {
               {auth?.id ? (
                 <>
                   <Link 
-                    to={auth?.admin ? "/admin" : "/finalizar-registro"}
+                    to={auth?.admin ? "/admin/dashboard" : "/finalizar-registro"}
                     className="navegacion-principal__enlace"
                   >
                     Administrar
@@ -187,7 +187,7 @@ export default function Header() {
           {auth?.id ? (
             <>
               <NavLink 
-                to={auth.admin ? "/admin" : "/finalizar-registro"}
+                to={auth.admin ? "/admin/dashboard" : "/finalizar-registro"}
                 className="menu-mobile__enlace menu-mobile__enlace--registrar"
               >
                 Administrar
@@ -203,13 +203,13 @@ export default function Header() {
           ) : (
             <>
               <Link 
-                to="/auth/registro" 
+                to="/registro" 
                 className="menu-mobile__enlace menu-mobile__enlace--registrar"
               >
                 Registro
               </Link>
               <Link 
-                to="/auth/login" 
+                to="/login" 
                 className="menu-mobile__enlace menu-mobile__enlace--login"
               >
                 Iniciar Sesión

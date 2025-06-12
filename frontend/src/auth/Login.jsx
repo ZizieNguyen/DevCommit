@@ -42,7 +42,15 @@ export default function Login() {
       
       setAuth(data.usuario || data);
 
-      if(data.admin || data.usuario?.admin) {
+      const userObj = data.usuario || data;
+      localStorage.setItem('auth_data', JSON.stringify(userObj));
+      setAuth(userObj);
+      console.log("Datos de usuario:", JSON.stringify(data, null, 2));
+      console.log("Campo admin:", userObj.admin, "Tipo:", typeof userObj.admin);
+      const isAdmin = userObj.admin === 1 || userObj.admin === true || userObj.admin === "1";
+      console.log("¿Es admin?", isAdmin);
+
+      if (isAdmin) {
         navigate('/admin/dashboard');
       } else {
         navigate('/eventos');

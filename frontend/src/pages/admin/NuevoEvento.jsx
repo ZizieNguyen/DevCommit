@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import Alerta from '../../components/Alerta';
-import FormularioEvento from './FormularioEvento';
+import Alerta from '../../components/alertas/Alerta';
+import FormularioEvento from '../../components/admin/FormularioEvento';
 import { FaCircleArrowLeft } from 'react-icons/fa6';
 import { clienteAxios } from '../../config/axios';
-import Submit from '../formulario/Submit';
+import Submit from '../../components/formulario/Submit';
 
 export default function NuevoEvento() {
   const [alerta, setAlerta] = useState({});

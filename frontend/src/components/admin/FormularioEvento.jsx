@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { clienteAxios } from '../config/axios';
-import Campo from '../formulario/Campo';
+import { clienteAxios } from "../../config/axios";
+import Campo from "../../components/formulario/Campo";
 
 export default function FormularioEvento({ evento = {} }) {
   const [categorias, setCategorias] = useState([]);

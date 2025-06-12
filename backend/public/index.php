@@ -13,7 +13,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
 require_once __DIR__ . '/../includes/app.php';
 
 // Obtener la ruta solicitada
-$ruta = $_SERVER['REQUEST_URI'] ?? '/';
+$ruta_completa = $_SERVER['REQUEST_URI'] ?? '/';
+$ruta = strtok($ruta_completa, '?'); 
 
 // Sistema de rutas manual
 switch(true) {
@@ -73,30 +74,43 @@ switch(true) {
     // API DE EVENTOS
     case $ruta === '/api/eventos' && $_SERVER['REQUEST_METHOD'] === 'GET':
         require_once __DIR__ . '/../controllers/APIEventosController.php';
-        \Controllers\APIEventosController::index();
+        \Controllers\APIEventos::index();
         break;
         
     case $ruta === '/api/eventos-horario' && $_SERVER['REQUEST_METHOD'] === 'GET':
         require_once __DIR__ . '/../controllers/APIEventosController.php';
-        \Controllers\APIEventosController::horario();
+        \Controllers\APIEventos::horario();
         break;
+
+
     
     // API DE PONENTES    
     case $ruta === '/api/ponentes' && $_SERVER['REQUEST_METHOD'] === 'GET':
-        require_once __DIR__ . '/../controllers/APIPonentesController.php';
-        \Controllers\APIPonentesController::index();
+        require_once __DIR__ . '/../controllers/APIPonentes.php';
+        \Controllers\APIPonentes::index();
         break;
         
     case strpos($ruta, '/api/ponente/') === 0 && $_SERVER['REQUEST_METHOD'] === 'GET':
-        require_once __DIR__ . '/../controllers/APIPonentesController.php';
+        require_once __DIR__ . '/../controllers/APIPonentes.php';
         $id = substr($ruta, strlen('/api/ponente/'));
-        \Controllers\APIPonentesController::ponente($id);
+        \Controllers\APIPonentes::ponente($id);
         break;
     
+    case strpos($ruta, '/api/ponentes/') === 0 && $_SERVER['REQUEST_METHOD'] === 'DELETE':
+        require_once __DIR__ . '/../controllers/APIPonentes.php';
+        $id = substr($ruta, strlen('/api/ponentes/'));
+        \Controllers\APIPonentes::eliminar($id);
+        break;
+
+    case $ruta === '/api/ponentes' && $_SERVER['REQUEST_METHOD'] === 'POST':
+        require_once __DIR__ . '/../controllers/APIPonentes.php';
+        \Controllers\APIPonentes::crear();
+        break;    
+        
     // API DE REGALOS    
     case $ruta === '/api/regalos' && $_SERVER['REQUEST_METHOD'] === 'GET':
-        require_once __DIR__ . '/../controllers/APIRegalosController.php';
-        \Controllers\APIRegalosController::index();
+        require_once __DIR__ . '/../controllers/APIRegalos.php';
+        \Controllers\APIRegalos::index();
         break;
     
     // EVENTOS (ADMIN)

@@ -1,15 +1,25 @@
 import { useState, useEffect, createContext } from 'react';
-import {clienteAxios} from '../config/axios';
 
-const AuthContext = createContext();
+
+export const AuthContext = createContext(); 
 
 export const AuthProvider = ({children}) => {
     // Estado para usuario autenticado
-    const [auth, setAuth] = useState({});
+    const [auth, setAuth] = useState(null);
     const [cargando, setCargando] = useState(true);
     
+    // Función para actualizar auth y guardar en localStorage
+    const actualizarAuth = (userData) => {
+        setAuth(userData);
+        if (userData) {
+            localStorage.setItem('auth_data', JSON.stringify(userData));
+        } else {
+            localStorage.removeItem('auth_data');
+        }
+    };
+    
     useEffect(() => {
-        const autenticarUsuario = async () => {
+        const recuperarSesion = () => {
             const token = localStorage.getItem('token');
             
             if(!token) {
@@ -17,33 +27,41 @@ export const AuthProvider = ({children}) => {
                 return;
             }
             
-            try {
-                const { data } = await clienteAxios.get('/perfil', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                setAuth(data);
-            } catch (error) {
-                console.error(error.response.data);
-                setAuth({});
-            } finally {
-                setCargando(false);
+            // Recuperar datos almacenados
+            const savedAuth = localStorage.getItem('auth_data');
+            if (savedAuth) {
+                try {
+                    const userData = JSON.parse(savedAuth);
+                    setAuth(userData);
+                } catch (e) {
+                    console.error("Error al recuperar sesión:", e);
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('auth_data');
+                    setAuth(null);
+                }
+            } else {
+                // No hay datos guardados, no podemos recuperar la sesión
+                localStorage.removeItem('token');
+                setAuth(null);
             }
-        }
-        autenticarUsuario();
+            
+            setCargando(false);
+        };
+        
+        recuperarSesion();
     }, []);
     
     const logout = () => {
         localStorage.removeItem('token');
-        setAuth({});
+        localStorage.removeItem('auth_data');
+        setAuth(null);
     };
     
     return (
         <AuthContext.Provider
             value={{
                 auth,
-                setAuth,
+                setAuth: actualizarAuth, // Usamos la nueva función
                 cargando,
                 logout
             }}

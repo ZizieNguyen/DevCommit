@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import Alerta from '../../components/Alerta';
+import { Link, useSearchParams } from 'react-router-dom';
+import Alerta from '../../components/alertas/Alerta';
 import { clienteAxios } from '../../config/axios';
 import { FaCirclePlus, FaPencil, FaCircleXmark } from 'react-icons/fa6';
 import Paginacion from '../../components/Paginacion';
@@ -8,9 +8,15 @@ import Paginacion from '../../components/Paginacion';
 export default function AdminEventos() {
   const [eventos, setEventos] = useState([]);
   const [alerta, setAlerta] = useState({});
-  const [paginaActual, setPaginaActual] = useState(1);
-  const [totalPaginas, setTotalPaginas] = useState(1);
+  const [totalPaginas, setTotalPaginas] = useState(1); 
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const paginaActual = Number(searchParams.get('page') || 1);
   const titulo = "Administrar Eventos";
+  
+  const cambiarPagina = (pagina) => {
+    setSearchParams({ page: pagina });
+  };
   
   useEffect(() => {
     const obtenerEventos = async () => {
@@ -63,7 +69,7 @@ export default function AdminEventos() {
       <div className="dashboard__contenedor-boton">
         <Link to="/admin/eventos/crear" className="dashboard__boton">
           <FaCirclePlus />
-          Añadir Evento
+          &nbsp;Añadir Evento
         </Link>
       </div>
       
@@ -133,7 +139,7 @@ export default function AdminEventos() {
         <Paginacion 
           paginaActual={paginaActual}
           totalPaginas={totalPaginas}
-          onChange={setPaginaActual}
+          onChange={cambiarPagina}
         />
       )}
     </>

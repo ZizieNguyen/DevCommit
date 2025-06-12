@@ -13,8 +13,12 @@ import  Reestablecer from './auth/Reestablecer';
 // Páginas de administrador
 import AdminLayout from './layouts/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
-// import AdminPonentes from './pages/admin/AdminPonentes';
-// import AdminEventos from './pages/admin/AdminEventos';
+import AdminPonentes from './pages/admin/AdminPonentes';
+import NuevoPonente from './pages/admin/NuevoPonente';
+import EditarPonente from './pages/admin/EditarPonente';
+import AdminEventos from './pages/admin/AdminEventos';
+import NuevoEvento from './pages/admin/NuevoEvento';
+import EditarEvento from './pages/admin/EditarEvento';
 // import AdminRegistrados from './pages/admin/AdminRegistrados';
 // import AdminRegalos from './pages/admin/AdminRegalos';
 // import AdminPerfil from './pages/admin/AdminPerfil';
@@ -38,11 +42,15 @@ function App() {
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboard />} />
             <Route path="dashboard" element={<AdminDashboard />} />
-            {/* <Route path="ponentes" element={<AdminPonentes />} />
+            <Route path="ponentes" element={<AdminPonentes />} />
+            <Route path="ponentes/crear" element={<NuevoPonente />} />
+            <Route path="ponentes/editar/:id" element={<EditarPonente />} />
             <Route path="eventos" element={<AdminEventos />} />
-            <Route path="registrados" element={<AdminRegistrados />} />
-            <Route path="regalos" element={<AdminRegalos />} />
-            <Route path="perfil" element={<AdminPerfil />} /> */}
+            <Route path="eventos/crear" element={<NuevoEvento />} />
+            <Route path="eventos/editar/:id" element={<EditarEvento />} />
+            {/* <Route path="registrados" element={<AdminRegistrados />} /> */}
+            {/* <Route path="regalos" element={<AdminRegalos />} /> */}
+            {/* <Route path="perfil" element={<AdminPerfil />} /> */}
           </Route>
         </Routes>
       </AuthProvider>

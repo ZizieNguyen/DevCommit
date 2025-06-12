@@ -10,9 +10,10 @@ export default function AdminLayout() {
   if(cargando) return 'Cargando...';
   
   // Redireccionar si el usuario no está autenticado o no es admin
-  if(!auth || !auth.admin) {
-    return <Navigate to="/" />;
-  }
+ if(!auth || typeof auth !== 'object' || (auth.admin !== 1 && auth.admin !== true && auth.admin !== "1")) {
+  console.log("Redirigiendo porque:", { auth });
+  return <Navigate to="/" />;
+}
   
   return (
     <div className="dashboard">
