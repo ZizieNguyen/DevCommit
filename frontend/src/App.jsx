@@ -2,8 +2,11 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthProvider';
 import Layout from './layouts/Layout';
 
+// Importación de las páginas públicas
+import HomePage from './pages/HomePage';
 
-// Importación de la página de login
+
+// Importación de la página de Auth
 import Login from './auth/Login';
 import Registro from './auth/Registro';
 import OlvidePassword from './auth/OlvidePassword';
@@ -28,9 +31,16 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <Routes>
-          {/* Área pública */}
+
+          {/* Ruta principal - Página de inicio */}
             <Route path="/" element={<Layout />}>
-              <Route index element={<Login />} />
+              <Route index element={<HomePage />} />
+            </Route>
+        
+
+          {/* Área de autenticación */}
+            <Route path="/" element={<Layout />}>
+              <Route index element={<HomePage />} />
               <Route path="login" element={<Login />} />
               <Route path="registro" element={<Registro />} />
               <Route path="olvide-password" element={<OlvidePassword />} />

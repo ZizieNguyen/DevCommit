@@ -92,15 +92,15 @@ class ActiveRecord {
 
     // Registros - CRUD
     public function guardar() {
-        $resultado = '';
+        error_log("ID antes de guardar: " . $this->id . " (tipo: " . gettype($this->id) . ")");
+        
         if(!is_null($this->id)) {
-            // actualizar
-            $resultado = $this->actualizar();
+            // Actualizar
+            return $this->actualizar();
         } else {
-            // Creando un nuevo registro
-            $resultado = $this->crear();
+            // Crear nuevo
+            return $this->crear();
         }
-        return $resultado;
     }
 
     // Obtener todos los Registros
@@ -229,6 +229,7 @@ class ActiveRecord {
 
     // Actualizar el registro
     public function actualizar() {
+        error_log("Ejecutando actualizar() para ID: {$this->id}");
         // Sanitizar los datos
         $atributos = $this->sanitizarAtributos();
 

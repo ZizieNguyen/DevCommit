@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { FaCircleArrowLeft } from 'react-icons/fa6';
 import FormularioPonente from '../../components/admin/FormularioPonente';
 import { clienteAxios } from '../../config/axios';
@@ -19,21 +19,15 @@ export default function NuevoPonente() {
     const formData = new FormData(formElement);
 
     if(!formData.get('imagen').name) {
-      setAlerta({
-        msg: 'La imagen es obligatoria',
-        tipo: 'error'
-      });
-      setCargando(false);
-      return;
-    }
+    console.log('No se seleccionó imagen, se usará la predeterminada');
+  }
     
-    // Procesar redes sociales
     const redes = {};
     for (let [key, value] of formData.entries()) {
       if (key.includes('redes[')) {
         const redSocial = key.split('[')[1].split(']')[0];
         redes[redSocial] = value;
-        formData.delete(key); // Eliminar la entrada original
+        formData.delete(key);
       }
     }
     
@@ -48,12 +42,24 @@ export default function NuevoPonente() {
         }
       });
       
-      setAlerta({
-      msg: data?.msg || 'Ponente registrado correctamente',
-      tipo: data?.error ? 'error' : 'exito'
-    });
-      
-      
+      if (data?.error === false && data?.id) {
+  // Solo mostrar éxito si explícitamente error=false Y se recibe un ID
+        setAlerta({
+          msg: data.msg || 'Ponente registrado correctamente',
+          tipo: 'exito'
+        });
+        // Opcional: Limpiar el formulario
+        e.target.reset();
+      } else {
+        // Cualquier otra respuesta es un error
+        setAlerta({
+          msg: data?.msg || 'Error al registrar el ponente',
+          tipo: 'error'
+        });
+      }
+
+      console.log('Alerta:', alerta);
+
     } catch (error) {
       console.error(error);
       setAlerta({

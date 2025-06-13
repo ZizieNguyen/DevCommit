@@ -4,6 +4,7 @@ import { FaFacebookF, FaTwitter, FaYoutube, FaInstagram, FaTiktok, FaGithub } fr
 export default function FormularioPonente({ponente = {}, setAlerta}) {
   const [tags, setTags] = useState([]);
   const [inputTag, setInputTag] = useState('');
+  const [imagenPreview, setImagenPreview] = useState(null);
   
   const [formData, setFormData] = useState({
     nombre: ponente?.nombre || '',
@@ -37,6 +38,58 @@ export default function FormularioPonente({ponente = {}, setAlerta}) {
       tags: tags.join(',')
     }));
   }, [tags]);
+  
+  // Actualizar formData cuando llegan los datos del ponente
+  useEffect(() => {
+    if(Object.keys(ponente).length > 0) {
+      setFormData({
+        nombre: ponente.nombre || '',
+        apellido: ponente.apellido || '',
+        ciudad: ponente.ciudad || '',
+        pais: ponente.pais || '',
+        imagen: '',  // No cambiamos la imagen
+        tags: ponente.tags || '',
+        redes: {
+          facebook: '',
+          twitter: '',
+          youtube: '',
+          instagram: '',
+          tiktok: '',
+          github: ''
+        }
+      });
+      
+      // Procesar redes sociales
+      if(ponente.redes) {
+        let redesObj;
+        if(typeof ponente.redes === 'string') {
+          try {
+            redesObj = JSON.parse(ponente.redes);
+          } catch(error) {
+            console.error("Error al parsear redes:", error);
+            redesObj = {};
+          }
+        } else {
+          redesObj = ponente.redes;
+        }
+        
+        setFormData(prev => ({
+          ...prev,
+          redes: {
+            facebook: redesObj.facebook || '',
+            twitter: redesObj.twitter || '',
+            youtube: redesObj.youtube || '',
+            instagram: redesObj.instagram || '',
+            tiktok: redesObj.tiktok || '',
+            github: redesObj.github || ''
+          }
+        }));
+      }
+      
+      // Limpiar preview de imagen cuando cambia el ponente
+      setImagenPreview(null);
+    }
+  }, [ponente]);
   
   const handleChange = e => {
     if(e.target.name.includes('redes')) {
@@ -80,17 +133,36 @@ export default function FormularioPonente({ponente = {}, setAlerta}) {
   };
   
   const handleImagenChange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // Validar que sea una imagen
+    if (!file.type.startsWith('image/')) {
+      setAlerta({
+        msg: 'El archivo debe ser una imagen',
+        tipo: 'error'
+      });
+      setTimeout(() => setAlerta({}), 3000);
+      return;
+    }
+    
+    // Guardar el archivo en el estado
     setFormData({
       ...formData,
-      imagen: e.target.files[0]
+      imagen: file
     });
+    
+    // Crear URL para previsualización
+    const objectUrl = URL.createObjectURL(file);
+    setImagenPreview(objectUrl);
+    
+    // Limpiar la URL al desmontar
+    return () => URL.revokeObjectURL(objectUrl);
   };
   
   
   return (
     <>
-      {/* Eliminamos el form y la alerta */}
-      
       <fieldset className="formulario__fieldset">
         <legend className="formulario__legend">Información Personal</legend>
 
@@ -153,11 +225,23 @@ export default function FormularioPonente({ponente = {}, setAlerta}) {
             className="formulario__input formulario__input--file"
             id="imagen"
             name="imagen"
+            accept="image/*"
             onChange={handleImagenChange}
           />
         </div>
 
-        {ponente.imagen && (
+        {/* Mostrar la nueva imagen seleccionada */}
+        {imagenPreview && (
+          <>
+            <p className="formulario__texto">Nueva Imagen:</p>
+            <div className="formulario__imagen">
+              <img src={imagenPreview} alt="Nueva Imagen Seleccionada" />
+            </div>
+          </>
+        )}
+        
+        {/* Mostrar la imagen actual si existe y no hay una nueva */}
+        {ponente.imagen && !imagenPreview && (
           <>
             <p className="formulario__texto">Imagen Actual:</p>
             <div className="formulario__imagen">
@@ -316,8 +400,6 @@ export default function FormularioPonente({ponente = {}, setAlerta}) {
           </div>
         </div>
       </fieldset>
-      
-      
     </>
   );
 }

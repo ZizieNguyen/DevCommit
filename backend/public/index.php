@@ -73,12 +73,12 @@ switch(true) {
     
     // API DE EVENTOS
     case $ruta === '/api/eventos' && $_SERVER['REQUEST_METHOD'] === 'GET':
-        require_once __DIR__ . '/../controllers/APIEventosController.php';
+        require_once __DIR__ . '/../controllers/APIEventos.php';
         \Controllers\APIEventos::index();
         break;
         
     case $ruta === '/api/eventos-horario' && $_SERVER['REQUEST_METHOD'] === 'GET':
-        require_once __DIR__ . '/../controllers/APIEventosController.php';
+        require_once __DIR__ . '/../controllers/APIEventos.php';
         \Controllers\APIEventos::horario();
         break;
 
@@ -89,12 +89,24 @@ switch(true) {
         require_once __DIR__ . '/../controllers/APIPonentes.php';
         \Controllers\APIPonentes::index();
         break;
+
+    case $ruta === '/api/ponentes' && $_SERVER['REQUEST_METHOD'] === 'POST':
+        require_once __DIR__ . '/../controllers/APIPonentes.php';
+        \Controllers\APIPonentes::crear();
+        break;  
+        
+    case $ruta === '/api/ponentes/editar' && $_SERVER['REQUEST_METHOD'] === 'POST':
+        require_once __DIR__ . '/../controllers/APIPonentes.php';
+        \Controllers\APIPonentes::actualizar();
+        break;    
         
     case strpos($ruta, '/api/ponente/') === 0 && $_SERVER['REQUEST_METHOD'] === 'GET':
         require_once __DIR__ . '/../controllers/APIPonentes.php';
         $id = substr($ruta, strlen('/api/ponente/'));
         \Controllers\APIPonentes::ponente($id);
         break;
+
+        
     
     case strpos($ruta, '/api/ponentes/') === 0 && $_SERVER['REQUEST_METHOD'] === 'DELETE':
         require_once __DIR__ . '/../controllers/APIPonentes.php';
@@ -102,10 +114,7 @@ switch(true) {
         \Controllers\APIPonentes::eliminar($id);
         break;
 
-    case $ruta === '/api/ponentes' && $_SERVER['REQUEST_METHOD'] === 'POST':
-        require_once __DIR__ . '/../controllers/APIPonentes.php';
-        \Controllers\APIPonentes::crear();
-        break;    
+       
         
     // API DE REGALOS    
     case $ruta === '/api/regalos' && $_SERVER['REQUEST_METHOD'] === 'GET':

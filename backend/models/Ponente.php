@@ -41,12 +41,12 @@ class Ponente extends ActiveRecord {
         if(!$this->pais) {
             self::$alertas['error'][] = 'El Campo País es Obligatorio';
         }
-        if(!$this->imagen) {
-            self::$alertas['error'][] = 'La imagen es obligatoria';
-        }
-        if(!$this->tags) {
-            self::$alertas['error'][] = 'El Campo áreas es obligatorio';
-        }
+        // if(!$this->imagen) {
+        //     self::$alertas['error'][] = 'La imagen es obligatoria';
+        // }
+        // if(!$this->tags) {
+        //     self::$alertas['error'][] = 'El Campo áreas es obligatorio';
+        // }
     
         return self::$alertas;
     }

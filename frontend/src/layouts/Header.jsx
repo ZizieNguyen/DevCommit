@@ -78,8 +78,8 @@ export default function Header() {
               </p>
               
               <div className="header__button--container">
-                <Link to="/registro" className="header__button">
-                  Comprar Pase
+                <Link to="/eventos" className="header__button">
+                  Explorar Eventos
                 </Link>
               </div>
             </div>
