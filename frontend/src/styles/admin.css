@@ -232,8 +232,9 @@
 
 .dashboard__formulario {
   width: 85%; /* Reducción del ancho */
-  max-width: 70rem; /* Límite máximo más pequeño */
-  margin: 0 auto;
+  max-width: 70rem;
+  max-height: 70vh; /* Límite máximo más pequeño */
+  margin: 0.5rem auto;
   background-color: var(--blanco);
   border-radius: 1rem;
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
@@ -264,7 +265,6 @@
   text-transform: uppercase;
   font-size: 1.3rem;
   font-weight: 700;
-  display: block;
   width: 100%;
   text-align: center;
   cursor: pointer;
@@ -613,7 +613,7 @@
 /* Formularios */
 .formulario {
   background-color: var(--blanco);
-  padding: 4rem;
+  padding: 2rem 5rem 2rem 5rem;
   border-radius: 1rem;
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
 }
@@ -832,3 +832,118 @@
 .dashboard__boton--exito:hover {
   background-color: #218838;
 }
+
+/* Estilos para Horas */
+.horas {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .horas {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+}
+
+.horas__hora,
+.horas__hora--seleccionada,
+.horas__hora--deshabilitada {
+  color: var(--primary);
+  border: 1px solid var(--primary);
+  border-radius: 1rem;
+  padding: 0.1rem;
+  text-align: center;
+}
+
+
+
+
+
+.horas__hora--seleccionada {
+  background-color: var(--primary);
+  color: var(--blanco);
+}
+
+.horas__hora:hover,
+.horas__hora--seleccionada:hover {
+  cursor: pointer;
+}
+
+.horas__hora--deshabilitada {
+  border: 1px solid var(--gris);
+  color: var(--gris);
+  opacity: .5;
+}
+
+.horas__hora--deshabilitada:hover {
+  cursor: not-allowed;
+}
+
+/* Estilos para Acciones */
+.acciones {
+  margin-top: 3rem;
+  display: flex;
+  justify-content: space-between;
+}
+
+.acciones--centrar {
+  margin-top: 3rem;
+  display: flex;
+  justify-content: center;
+}
+
+.acciones__enlace {
+  color: var(--negro);
+  font-size: 1.4rem;
+  font-weight: 300;
+}
+
+/* Ajustes adicionales para el formulario de eventos */
+.formulario__radio {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.5rem;
+}
+
+.formulario__radio > div {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.formulario__radio label {
+  cursor: pointer;
+}
+
+.listado-ponentes {
+  max-height: 15rem;
+  overflow-y: auto;
+  border: 1px solid var(--gris-claro);
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.listado-ponentes__no-resultado {
+  text-align: center;
+  color: var(--gris);
+  padding: 1rem;
+}
+
+/* Para asegurar que el formulario se vea correctamente en móviles */
+@media (max-width: 768px) {
+  .formulario__radio {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .formulario__campo {
+    margin-bottom: 1.5rem;
+  }
+}Ks

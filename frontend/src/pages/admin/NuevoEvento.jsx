@@ -12,34 +12,46 @@ export default function NuevoEvento() {
   const titulo = "Crear Evento";
   
   const handleSubmit = async (e) => {
-    e.preventDefault();
+  e.preventDefault();
+  
+  // Obtener los datos del formulario en formato JSON
+  const formData = new FormData(e.target);
+  const datos = Object.fromEntries(formData);
+  
+  try {
+    console.log('Datos a enviar:', datos);
+
+    // Enviar como JSON
+    const response = await clienteAxios.post('/admin/eventos', datos, {
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    console.log('Respuesta completa:', response);
+
+    const { data } = response;
     
-    // Obtener los datos del formulario
-    const formData = new FormData(e.target);
-    const datos = Object.fromEntries(formData);
+    setAlerta({
+      msg: data.msg || 'Evento creado correctamente',
+      tipo: 'exito'
+    });
     
-    try {
-      const { data } = await clienteAxios.post('/admin/eventos', datos);
-      
-      setAlerta({
-        msg: data.msg || 'Evento creado correctamente',
-        tipo: 'exito'
-      });
-      
-      // Redireccionar después de mostrar mensaje de éxito
-      setTimeout(() => {
-        navigate('/admin/eventos');
-      }, 3000);
-      
-    } catch (error) {
-      console.error('Error al crear evento:', error);
-      
-      setAlerta({
-        msg: error.response?.data?.msg || 'Error al crear el evento',
-        tipo: 'error'
-      });
-    }
-  };
+    // Redireccionar después de mostrar mensaje de éxito
+    setTimeout(() => {
+      navigate('/admin/eventos');
+    }, 3000);
+    
+  } catch (error) {
+    console.error('Error al crear evento:', error);
+    console.log('Respuesta del servidor:', error.response?.data);
+    
+    setAlerta({
+      msg: error.response?.data?.msg || 'Error al crear el evento',
+      tipo: 'error'
+    });
+  }
+};
   
   const { msg, tipo } = alerta;
   

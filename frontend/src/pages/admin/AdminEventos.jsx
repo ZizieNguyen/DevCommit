@@ -12,36 +12,37 @@ export default function AdminEventos() {
   const [paginaActual, setPaginaActual] = useState(1);
   const [totalPaginas, setTotalPaginas] = useState(1);
   const titulo = "Eventos";
-
+  
   useEffect(() => {
     const obtenerEventos = async () => {
       try {
         setCargando(true);
         
-        // Intentar obtener los eventos
-        const { data } = await clienteAxios.get(`/api/eventos?page=${paginaActual}`);
+        // CAMBIO 1: Usar el endpoint para administración en lugar del API público
+        const { data } = await clienteAxios.get(`/admin/eventos?pagina=${paginaActual}`);
+        console.log("Datos recibidos:", data);
         
-        console.log('Datos recibidos de API eventos:', data);
-        
-        // Asegurarse de que eventos sea un array
-        if (Array.isArray(data)) {
-          setEventos(data);
-        } else if (data && Array.isArray(data.eventos)) {
+        // CAMBIO 2: Adaptarse a la estructura del objeto devuelto por /admin/eventos
+        // que podría ser diferente a /api/eventos
+        if (data && data.eventos) {
           setEventos(data.eventos);
           if (data.paginacion) {
-            setTotalPaginas(data.paginacion.totalPaginas);
+            setTotalPaginas(data.paginacion.total_paginas || 1);
           }
+        } else if (Array.isArray(data)) {
+          // Si la API devuelve directamente un array de eventos
+          setEventos(data);
         } else {
-          console.error('Formato de datos inesperado:', data);
-          setEventos([]); // Siempre asegurar que sea un array
+          console.error("Formato de datos inesperado:", data);
+          setEventos([]);
           setAlerta({
-            msg: 'Error en el formato de respuesta del servidor',
+            msg: 'El servidor devolvió un formato de datos inesperado',
             tipo: 'error'
           });
         }
       } catch (error) {
-        console.error('Error al cargar eventos:', error);
-        setEventos([]); // Importante: inicializar como array vacío
+        console.error("Error completo:", error);
+        setEventos([]);
         setAlerta({
           msg: error.response?.data?.msg || 'Error al cargar los eventos',
           tipo: 'error'
@@ -55,10 +56,11 @@ export default function AdminEventos() {
   }, [paginaActual]);
 
   const handleEliminar = async (id) => {
-    if (!confirm('¿Estás seguro de eliminar este evento?')) return;
+    if(!confirm('¿Estás seguro de eliminar este evento?')) return;
     
     try {
-      const { data } = await clienteAxios.delete(`/api/eventos/${id}`);
+      // CAMBIO 3: Usar el endpoint de administración para eliminar
+      const { data } = await clienteAxios.post(`/admin/eventos/eliminar`, { id });
       
       setAlerta({
         msg: data?.msg || 'Evento eliminado correctamente',

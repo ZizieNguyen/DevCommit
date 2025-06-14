@@ -15,23 +15,23 @@ class EventosController {
 
     public static function index() {
         // Validar autenticación
-        if(!isset($_SESSION['id'])) {
-            echo json_encode([
-                'error' => true,
-                'msg' => 'Acceso denegado'
-            ]);
-            return;
-        }
+        // if(!isset($_SESSION['id'])) {
+        //     echo json_encode([
+        //         'error' => true,
+        //         'msg' => 'Acceso denegado'
+        //     ]);
+        //     return;
+        // }
         
-        // Verificar si es admin
-        $usuario = Usuario::find($_SESSION['id']);
-        if(!$usuario->admin) {
-            echo json_encode([
-                'error' => true,
-                'msg' => 'Acceso denegado'
-            ]);
-            return;
-        }
+        // // Verificar si es admin
+        // $usuario = Usuario::find($_SESSION['id']);
+        // if(!$usuario->admin) {
+        //     echo json_encode([
+        //         'error' => true,
+        //         'msg' => 'Acceso denegado'
+        //     ]);
+        //     return;
+        // }
         
         // Parámetros de paginación (desde query params)
         $pagina = $_GET['pagina'] ?? 1;
@@ -132,6 +132,8 @@ class EventosController {
             // Obtener JSON del cuerpo de la petición
             $json = file_get_contents("php://input");
             $datos = json_decode($json, true);
+
+            error_log("Datos recibidos: " . json_encode($datos));
             
             $evento = new Evento();
             $evento->sincronizar($datos);
@@ -140,6 +142,8 @@ class EventosController {
             
             if(empty($alertas)) {
                 $resultado = $evento->guardar();
+
+                error_log("Resultado de guardar: " . json_encode($resultado));
                 
                 echo json_encode([
                     'error' => false,

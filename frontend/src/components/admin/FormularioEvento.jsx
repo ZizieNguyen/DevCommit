@@ -1,93 +1,301 @@
 import { useState, useEffect } from 'react';
 import { clienteAxios } from "../../config/axios";
-import Campo from "../../components/formulario/Campo";
 
 export default function FormularioEvento({ evento = {} }) {
+  // Estados para los valores del formulario
+  const [nombre, setNombre] = useState(evento.nombre || '');
+  const [descripcion, setDescripcion] = useState(evento.descripcion || '');
+  const [categoriaId, setCategoriaId] = useState(evento.categoria_id || '');
+  const [diaId, setDiaId] = useState(evento.dia_id || '');
+  const [horaId, setHoraId] = useState(evento.hora_id || '');
+  const [ponenteId, setPonenteId] = useState(evento.ponente_id || '');
+  const [disponibles, setDisponibles] = useState(evento.disponibles || '');
+  const [busqueda, setBusqueda] = useState('');
+  
+  // Estados para los datos obtenidos de la API
   const [categorias, setCategorias] = useState([]);
   const [dias, setDias] = useState([]);
   const [horas, setHoras] = useState([]);
+  const [horasDisponibles, setHorasDisponibles] = useState({});
   const [ponentes, setPonentes] = useState([]);
   const [ponentesFiltrados, setPonenteFiltrados] = useState([]);
-  const [busqueda, setBusqueda] = useState('');
   const [ponenteSeleccionado, setPonenteSeleccionado] = useState(null);
-  const [horaSeleccionada, setHoraSeleccionada] = useState(evento?.hora_id || null);
+  const [cargando, setCargando] = useState(true);
   
-  // Campos controlados para evitar warnings con Campo
-  const [nombre, setNombre] = useState(evento.nombre || '');
-  const [descripcion, setDescripcion] = useState(evento.descripcion || '');
-  const [disponibles, setDisponibles] = useState(evento.disponibles || '');
-  
+  // Efecto para cargar datos iniciales
   useEffect(() => {
-    const obtenerDatos = async () => {
+    const cargarDatos = async () => {
       try {
-        const [categoriasRes, diasRes, horasRes, ponentesRes] = await Promise.all([
-          clienteAxios('/admin/categorias'),
-          clienteAxios('/admin/dias'),
-          clienteAxios('/admin/horas'),
-          clienteAxios('/admin/ponentes')
+        setCargando(true);
+        
+        // Cargar datos de las APIs
+        const [categoriasRes, diasRes, horasRes] = await Promise.all([
+          clienteAxios('/api/categorias'),
+          clienteAxios('/api/dias'),
+          clienteAxios('/api/horas')
         ]);
         
-        setCategorias(categoriasRes.data);
-        setDias(diasRes.data);
-        setHoras(horasRes.data);
-        setPonentes(ponentesRes.data);
+        // Establecer estados con los datos recibidos
+        setCategorias(categoriasRes.data?.categorias || []);
+        setDias(diasRes.data?.dias || []);
+        setHoras(horasRes.data?.horas || []);
         
-        // Si estamos editando, buscar el ponente seleccionado
+        // Cargar TODOS los ponentes (no solo primera página)
+        await cargarTodosLosPonentes();
+        
+        // Si estamos editando, cargar el ponente
         if (evento?.ponente_id) {
-          const ponente = ponentesRes.data.find(p => p.id === evento.ponente_id);
-          setPonenteSeleccionado(ponente);
+          try {
+            // Intentar ambos formatos de URL para obtener el ponente
+            let ponenteRes;
+            try {
+              // Primero intentar con formato de ruta
+              ponenteRes = await clienteAxios(`/api/ponente/${evento.ponente_id}`);
+            } catch  {
+              // Si falla, intentar con formato de query string
+              ponenteRes = await clienteAxios(`/api/ponente?id=${evento.ponente_id}`);
+            }
+            
+            console.log("Datos ponente específico:", ponenteRes.data);
+            setPonenteSeleccionado(ponenteRes.data);
+          } catch (error) {
+            console.error('Error al cargar datos del ponente:', error);
+          }
         }
         
-        // Si estamos editando, marcar la hora seleccionada
-        if (evento?.hora_id) {
-          setHoraSeleccionada(evento.hora_id);
+        // Cargar eventos-horario si ya tenemos categoría y día (caso de edición)
+        if (evento.categoria_id && evento.dia_id) {
+          try {
+            await buscarEventos(evento.dia_id, evento.categoria_id);
+          } catch (error) {
+            console.error('Error al cargar eventos por horario:', error);
+          }
         }
-        
       } catch (error) {
-        console.error('Error al cargar datos del formulario:', error);
+        console.error('Error general al cargar datos:', error);
+      } finally {
+        setCargando(false);
       }
     };
     
-    obtenerDatos();
-  }, [evento?.ponente_id, evento?.hora_id]);
+    cargarDatos();
+  }, []);
   
-  // Filtrar ponentes según búsqueda
+  // Función para cargar todos los ponentes (posiblemente múltiples páginas)
+  const cargarTodosLosPonentes = async () => {
+  try {
+    console.log("Iniciando carga de todos los ponentes");
+    
+    // Arreglo para almacenar todos los ponentes de todas las páginas
+    let todosLosPonentes = [];
+    
+    // Iniciar en la página 1
+    let paginaActual = 1;
+    let hayMasPaginas = true;
+    let ponentesPorPagina = 0;
+    
+    // Seguir cargando páginas mientras haya más
+    while (hayMasPaginas) {
+      console.log(`Cargando ponentes - página ${paginaActual}`);
+      
+      // Cargar la página actual
+      const respuesta = await clienteAxios(`/api/ponentes?page=${paginaActual}`);
+      
+      // Extraer ponentes de esta página
+      let ponentesDePagina = [];
+      
+      if (respuesta.data) {
+        if (Array.isArray(respuesta.data)) {
+          ponentesDePagina = respuesta.data;
+        } else if (respuesta.data.ponentes && Array.isArray(respuesta.data.ponentes)) {
+          ponentesDePagina = respuesta.data.ponentes;
+        } else if (respuesta.data.data && Array.isArray(respuesta.data.data)) {
+          ponentesDePagina = respuesta.data.data;
+        }
+      }
+      
+      // Si es la primera página, guardar cuántos ponentes hay por página normalmente
+      if (paginaActual === 1) {
+        ponentesPorPagina = ponentesDePagina.length;
+        console.log(`Detectados ${ponentesPorPagina} ponentes por página`);
+      }
+      
+      console.log(`Página ${paginaActual}: ${ponentesDePagina.length} ponentes encontrados`);
+      
+      // Agregar los ponentes de esta página al arreglo total
+      todosLosPonentes = [...todosLosPonentes, ...ponentesDePagina];
+      
+      // Determinar si hay más páginas
+      // Si la página actual tiene menos ponentes que el tamaño habitual de página o está vacía, 
+      // entonces es la última página
+      if (ponentesDePagina.length === 0 || 
+          (ponentesPorPagina > 0 && ponentesDePagina.length < ponentesPorPagina)) {
+        hayMasPaginas = false;
+        console.log("No hay más páginas para cargar");
+      } else {
+        // Pasar a la siguiente página
+        paginaActual++;
+      }
+    }
+    
+    console.log(`Carga completa. Total de ponentes cargados: ${todosLosPonentes.length}`);
+    
+    // Formatear todos los ponentes una vez que los tenemos todos
+    const ponentesFormateados = todosLosPonentes.map(ponente => {
+      const nombreCompleto = `${ponente.nombre || ''} ${ponente.apellido || ''}`.trim();
+      return {
+        nombre: nombreCompleto,
+        id: ponente.id,
+        datos: ponente
+      };
+    });
+    
+    console.log("Todos los ponentes formateados:", ponentesFormateados);
+    setPonentes(ponentesFormateados);
+    
+  } catch (error) {
+    console.error("Error al cargar todos los ponentes:", error);
+  }
+};
+  
+  // Función para buscar eventos por día y categoría
+  const buscarEventos = async (diaId, categoriaId) => {
+    try {
+      const url = `/api/eventos-horario?dia_id=${diaId}&categoria_id=${categoriaId}`;
+      const resultado = await clienteAxios(url);
+      
+      // Comprueba la estructura de la respuesta en la consola
+      console.log('Respuesta de la API eventos-horario:', resultado);
+      
+      // Asegúrate de que datos sea siempre un array
+      let eventos = [];
+      if (resultado && resultado.data) {
+        // Si la respuesta tiene una propiedad 'data'
+        eventos = Array.isArray(resultado.data) ? resultado.data : [];
+      }
+      
+      // Procesar las horas disponibles con el array garantizado
+      obtenerHorasDisponibles(eventos);
+    } catch (error) {
+      console.error('Error al buscar eventos:', error);
+      // En caso de error, considerar todas las horas como disponibles
+      const disponibilidad = {};
+      horas.forEach(hora => {
+        disponibilidad[hora.id] = true;
+      });
+      setHorasDisponibles(disponibilidad);
+    }
+  };
+  
+  // Función para obtener horas disponibles a partir de los eventos
+  const obtenerHorasDisponibles = (eventos) => {
+    // Asegurarse que eventos es un array
+    const eventosArray = Array.isArray(eventos) ? eventos : [];
+    
+    // Extraer IDs de horas ya tomadas
+    const horasTomadas = eventosArray.map(evento => evento.hora_id);
+    
+    // Crear objeto con disponibilidad de horas
+    const disponibilidad = {};
+    horas.forEach(hora => {
+      disponibilidad[hora.id] = !horasTomadas.includes(hora.id);
+    });
+    
+    // Si estamos editando, siempre permitir la hora actual
+    if (evento.id && evento.hora_id) {
+      disponibilidad[evento.hora_id] = true;
+    }
+    
+    setHorasDisponibles(disponibilidad);
+  };
+  
+  // Función para manejar cambio de categoría
+  const handleChangeCategoria = (e) => {
+    const nuevaCategoriaId = e.target.value;
+    setCategoriaId(nuevaCategoriaId);
+    
+    // Reiniciar hora seleccionada
+    setHoraId('');
+    
+    // Si hay día seleccionado, buscar eventos disponibles
+    if (diaId && nuevaCategoriaId) {
+      buscarEventos(diaId, nuevaCategoriaId);
+    }
+  };
+  
+  // Función para manejar cambio de día
+  const handleChangeDia = (id) => {
+    setDiaId(id);
+    
+    // Reiniciar hora seleccionada
+    setHoraId('');
+    
+    // Si hay categoría seleccionada, buscar eventos disponibles
+    if (categoriaId && id) {
+      buscarEventos(id, categoriaId);
+    }
+  };
+  
+  // Función para seleccionar hora
+  const handleSeleccionarHora = (id) => {
+    setHoraId(id);
+  };
+  
+  // Efecto para filtrar ponentes localmente
   useEffect(() => {
-    if (busqueda.length > 2) {
+    console.log("Filtrando ponentes con:", busqueda);
+    console.log("Total de ponentes disponibles para filtrar:", ponentes.length);
+    
+    if (busqueda.length > 3 && ponentes.length > 0) {
+      const terminoBusqueda = busqueda.toLowerCase().trim();
+      
       const filtrados = ponentes.filter(ponente => 
-        `${ponente.nombre} ${ponente.apellido}`.toLowerCase().includes(busqueda.toLowerCase())
+        ponente.nombre.toLowerCase().includes(terminoBusqueda)
       );
+      
+      console.log(`Encontrados ${filtrados.length} ponentes que coinciden con "${terminoBusqueda}"`);
       setPonenteFiltrados(filtrados);
     } else {
       setPonenteFiltrados([]);
     }
   }, [busqueda, ponentes]);
   
+  // Manejador de búsqueda (ahora solo actualiza el estado de búsqueda)
+  const handleBusquedaChange = (e) => {
+    setBusqueda(e.target.value);
+  };
+  
+  // Función para seleccionar ponente
   const handleSeleccionarPonente = (ponente) => {
-    setPonenteSeleccionado(ponente);
+    setPonenteId(ponente.id);
+    setPonenteSeleccionado(ponente.datos);
+    // Limpia la búsqueda para mejor UX
     setBusqueda('');
     setPonenteFiltrados([]);
   };
   
-  const handleSeleccionarHora = (horaId) => {
-    setHoraSeleccionada(horaId);
-  };
+  if (cargando) {
+    return <p className="text-center">Cargando formulario...</p>;
+  }
   
   return (
     <>
       <fieldset className="formulario__fieldset">
         <legend className="formulario__legend">Información Evento</legend>
 
-        <Campo 
-          label="Nombre Evento"
-          id="nombre"
-          type="text"
-          placeholder="Nombre Evento"
-          value={nombre}
-          onChange={e => setNombre(e.target.value)}
-        />
+        <div className="formulario__campo">
+          <label htmlFor="nombre" className="formulario__label">Nombre Evento</label>
+          <input
+            type="text"
+            className="formulario__input"
+            id="nombre"
+            name="nombre"
+            placeholder="Nombre Evento"
+            value={nombre}
+            onChange={e => setNombre(e.target.value)}
+          />
+        </div>
 
-        {/* Textarea sin componente personalizado */}
         <div className="formulario__campo">
           <label htmlFor="descripcion" className="formulario__label">Descripción</label>
           <textarea
@@ -107,10 +315,11 @@ export default function FormularioEvento({ evento = {} }) {
             className="formulario__select"
             id="categoria"
             name="categoria_id"
-            defaultValue={evento.categoria_id || ''}
+            value={categoriaId}
+            onChange={handleChangeCategoria}
           >
             <option value="">- Seleccionar -</option>
-            {categorias.map(categoria => (
+            {Array.isArray(categorias) && categorias.map(categoria => (
               <option 
                 key={categoria.id} 
                 value={categoria.id}
@@ -125,7 +334,7 @@ export default function FormularioEvento({ evento = {} }) {
           <label htmlFor="categoria" className="formulario__label">Selecciona el día</label>
 
           <div className="formulario__radio">
-            {dias.map(dia => (
+            {Array.isArray(dias) && dias.map(dia => (
               <div key={dia.id}>
                 <label htmlFor={dia.nombre.toLowerCase()}>{dia.nombre}</label>
                 <input
@@ -133,11 +342,8 @@ export default function FormularioEvento({ evento = {} }) {
                   id={dia.nombre.toLowerCase()}
                   name="dia"
                   value={dia.id}
-                  defaultChecked={evento.dia_id === dia.id}
-                  onChange={() => {
-                    // Actualizar el input oculto
-                    document.querySelector('input[name="dia_id"]').value = dia.id;
-                  }}
+                  checked={Number(diaId) === Number(dia.id)}
+                  onChange={() => handleChangeDia(dia.id)}
                 />
               </div>
             ))}
@@ -146,7 +352,7 @@ export default function FormularioEvento({ evento = {} }) {
           <input 
             type="hidden" 
             name="dia_id" 
-            defaultValue={evento.dia_id || ''}
+            value={diaId}
           />
         </div>
 
@@ -154,28 +360,41 @@ export default function FormularioEvento({ evento = {} }) {
           <label className="formulario__label">Seleccionar Hora</label>
 
           <ul id="horas" className="horas">
-            {horas.map(hora => (
-              <li 
-                key={hora.id}
-                data-hora-id={hora.id}
-                className={`horas__hora ${horaSeleccionada === hora.id 
-                  ? 'horas__hora--seleccionada' 
-                  : 'horas__hora--deshabilitada'}`}
-                onClick={() => {
-                  handleSeleccionarHora(hora.id);
-                  // Actualizar el input oculto
-                  document.querySelector('input[name="hora_id"]').value = hora.id;
-                }}
-              >
-                {hora.hora}
-              </li>
-            ))}
+            {Array.isArray(horas) && horas.map(hora => {
+              // Determinar si la hora está disponible
+              const disponible = horasDisponibles[hora.id];
+              const seleccionada = Number(horaId) === Number(hora.id);
+              
+              // Determinar clases según disponibilidad y selección
+              let claseHora = "horas__hora horas__hora--deshabilitada";
+              if (disponible && seleccionada) {
+                claseHora = "horas__hora horas__hora--seleccionada";
+              } else if (disponible) {
+                claseHora = "horas__hora";
+              }
+              
+              return (
+                <li 
+                  key={hora.id}
+                  data-hora-id={hora.id}
+                  className={claseHora}
+                  onClick={() => {
+                    // Solo permitir clic si está disponible
+                    if (disponible) {
+                      handleSeleccionarHora(hora.id);
+                    }
+                  }}
+                >
+                  {hora.hora}
+                </li>
+              );
+            })}
           </ul>
 
           <input 
             type="hidden" 
             name="hora_id" 
-            defaultValue={evento.hora_id || ''}
+            value={horaId}
           />
         </div>
       </fieldset>
@@ -191,42 +410,62 @@ export default function FormularioEvento({ evento = {} }) {
             id="ponentes"
             placeholder="Buscar Ponente"
             value={busqueda}
-            onChange={e => setBusqueda(e.target.value)}
+            onChange={handleBusquedaChange}
           />
+          
+          {/* Mensaje de ayuda para la búsqueda */}
+          {busqueda.length > 0 && busqueda.length <= 3 && (
+            <p className="text-center">Escribe al menos 4 caracteres para buscar</p>
+          )}
+          
           <ul id="listado-ponentes" className="listado-ponentes">
-            {ponentesFiltrados.map(ponente => (
-              <li 
-                key={ponente.id} 
-                className="listado-ponentes__ponente"
-                onClick={() => handleSeleccionarPonente(ponente)}
-              >
-                {ponente.nombre} {ponente.apellido}
-              </li>
-            ))}
+            {ponentesFiltrados.length > 0 ? (
+              ponentesFiltrados.map(ponente => (
+                <li 
+                  key={ponente.id} 
+                  data-ponente-id={ponente.id}
+                  className={`listado-ponentes__ponente ${ponenteId === ponente.id ? 'listado-ponentes__ponente--seleccionado' : ''}`}
+                  onClick={() => handleSeleccionarPonente(ponente)}
+                >
+                  {ponente.nombre}
+                </li>
+              ))
+            ) : (
+              busqueda.length > 3 && (
+                <p className="listado-ponentes__no-resultado">
+                  No hay resultados para tu búsqueda
+                </p>
+              )
+            )}
           </ul>
 
-          {ponenteSeleccionado && (
-            <div className="formulario__campo">
-              <p>Ponente seleccionado: {ponenteSeleccionado.nombre} {ponenteSeleccionado.apellido}</p>
-            </div>
+          {/* Mostrar ponente seleccionado cuando existe y no hay búsqueda */}
+          {ponenteSeleccionado && !busqueda.length && (
+            <p className="listado-ponentes__ponente listado-ponentes__ponente--seleccionado">
+              {`${ponenteSeleccionado.nombre} ${ponenteSeleccionado.apellido}`}
+            </p>
           )}
 
           <input 
             type="hidden" 
             name="ponente_id" 
-            value={ponenteSeleccionado?.id || evento.ponente_id || ''}
+            value={ponenteId}
           />
         </div>
 
-        <Campo
-          type="number"
-          label="Lugares Disponibles"
-          id="disponibles"
-          placeholder="Ej. 20"
-          min="1"
-          value={disponibles}
-          onChange={e => setDisponibles(e.target.value)}
-        />
+        <div className="formulario__campo">
+          <label htmlFor="disponibles" className="formulario__label">Lugares Disponibles</label>
+          <input
+            type="number"
+            min="1"
+            className="formulario__input"
+            id="disponibles"
+            name="disponibles"
+            placeholder="Ej. 20"
+            value={disponibles}
+            onChange={e => setDisponibles(e.target.value)}
+          />
+        </div>
       </fieldset>
     </>
   );

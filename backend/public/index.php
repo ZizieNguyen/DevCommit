@@ -114,15 +114,33 @@ switch(true) {
         \Controllers\APIPonentes::eliminar($id);
         break;
 
-       
-        
-    // API DE REGALOS    
-    case $ruta === '/api/regalos' && $_SERVER['REQUEST_METHOD'] === 'GET':
-        require_once __DIR__ . '/../controllers/APIRegalos.php';
-        \Controllers\APIRegalos::index();
+
+
+    // API para obtener categorías
+    case $ruta === '/api/categorias' && $_SERVER['REQUEST_METHOD'] === 'GET':
+        require_once __DIR__ . '/../controllers/CategoriasController.php';
+        \Controllers\CategoriasController::api();
         break;
-    
-    // EVENTOS (ADMIN)
+
+    // API para obtener días
+    case $ruta === '/api/dias' && $_SERVER['REQUEST_METHOD'] === 'GET':
+        require_once __DIR__ . '/../controllers/DiasController.php';
+        \Controllers\DiasController::api();
+        break;
+
+    // API para obtener horas
+    case $ruta === '/api/horas' && $_SERVER['REQUEST_METHOD'] === 'GET':
+        require_once __DIR__ . '/../controllers/HorasController.php';
+        \Controllers\HorasController::api();
+        break;    
+
+// API DE REGALOS
+case $ruta === '/api/regalos' && $_SERVER['REQUEST_METHOD'] === 'GET':
+    require_once __DIR__ . '/../controllers/APIRegalos.php';
+    \Controllers\APIRegalos::index();
+    break;
+
+// EVENTOS (ADMIN)
     case $ruta === '/admin/eventos' && $_SERVER['REQUEST_METHOD'] === 'GET':
         require_once __DIR__ . '/../controllers/EventosController.php';
         \Controllers\EventosController::index();
