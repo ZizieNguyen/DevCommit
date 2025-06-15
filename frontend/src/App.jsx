@@ -4,6 +4,11 @@ import Layout from './layouts/Layout';
 
 // Importación de las páginas públicas
 import HomePage from './pages/HomePage';
+import SobreDevCommit from './pages/SobreDevCommit';
+import Paquetes from './pages/Paquetes';
+import Ponentes from './pages/Ponentes';
+import PonenteDetail from './pages/PonenteDetail';
+import NotFoundPage from './pages/NotFoundPage';
 
 
 // Importación de la página de Auth
@@ -11,7 +16,7 @@ import Login from './auth/Login';
 import Registro from './auth/Registro';
 import OlvidePassword from './auth/OlvidePassword';
 import Confirmar from './auth/Confirmar';
-import  Reestablecer from './auth/Reestablecer';
+import Reestablecer from './auth/Reestablecer';
 
 // Páginas de administrador
 import AdminLayout from './layouts/AdminLayout';
@@ -32,9 +37,15 @@ function App() {
       <AuthProvider>
         <Routes>
 
-          {/* Ruta principal - Página de inicio */}
+          {/* Ruta principal - Público */}
             <Route path="/" element={<Layout />}>
               <Route index element={<HomePage />} />
+              <Route path="/sobre" element={<SobreDevCommit />} />
+              <Route path="/paquetes" element={<Paquetes />} />
+              <Route path="/ponentes" element={<Ponentes />} />
+              <Route path="/ponentes/:id" element={<PonenteDetail />} />
+              <Route path="*" element={<NotFoundPage />} />
+              
             </Route>
         
 

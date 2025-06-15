@@ -82,9 +82,12 @@ switch(true) {
         \Controllers\APIEventos::horario();
         break;
 
+    case $ruta === '/admin/eventos/crear' && $_SERVER['REQUEST_METHOD'] === 'POST':
+        require_once __DIR__ . '/../controllers/EventosController.php';
+        \Controllers\EventosController::crear();
+        break;    
 
-    
-    // API DE PONENTES    
+    // API DE PONENTES
     case $ruta === '/api/ponentes' && $_SERVER['REQUEST_METHOD'] === 'GET':
         require_once __DIR__ . '/../controllers/APIPonentes.php';
         \Controllers\APIPonentes::index();
@@ -160,7 +163,7 @@ case $ruta === '/api/regalos' && $_SERVER['REQUEST_METHOD'] === 'GET':
     case strpos($ruta, '/admin/eventos/editar/') === 0 && $_SERVER['REQUEST_METHOD'] === 'POST':
         require_once __DIR__ . '/../controllers/EventosController.php';
         $id = substr($ruta, strlen('/admin/eventos/editar/'));
-        \Controllers\EventosController::actualizar($id);
+        \Controllers\EventosController::editar($id);
         break;
         
     case strpos($ruta, '/admin/eventos/eliminar/') === 0 && $_SERVER['REQUEST_METHOD'] === 'POST':

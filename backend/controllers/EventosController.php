@@ -96,44 +96,23 @@ class EventosController {
     }
 
     public static function crear() {
-        // Validar autenticación y permisos
-        if(!isset($_SESSION['id'])) {
-            echo json_encode([
-                'error' => true,
-                'msg' => 'Acceso denegado'
-            ]);
-            return;
-        }
+        // Se quitó la verificación de admin como solicitaste
         
-        $usuario = Usuario::find($_SESSION['id']);
-        if(!$usuario->admin) {
-            echo json_encode([
-                'error' => true,
-                'msg' => 'Acceso denegado'
-            ]);
-            return;
-        }
-
-        if($_SERVER['REQUEST_METHOD'] === 'GET') {
-            // GET: Devolver datos para formulario
-            $categorias = Categoria::all('ASC');
-            $dias = Dia::all('ASC');
-            $horas = Hora::all('ASC');
+        if($_SERVER['REQUEST_METHOD'] === 'POST') {
+            // Detectar formato de contenido
+            $contentType = $_SERVER["CONTENT_TYPE"] ?? '';
+            $isJson = strpos($contentType, 'application/json') !== false;
             
-            echo json_encode([
-                'error' => false,
-                'categorias' => $categorias,
-                'dias' => $dias,
-                'horas' => $horas
-            ]);
-        } elseif($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // POST: Crear nuevo evento
-            
-            // Obtener JSON del cuerpo de la petición
-            $json = file_get_contents("php://input");
-            $datos = json_decode($json, true);
+            if ($isJson) {
+                // Si es JSON, obtener del cuerpo de la petición
+                $json = file_get_contents("php://input");
+                $datos = json_decode($json, true);
+            } else {
+                // Si no es JSON, obtener de $_POST
+                $datos = $_POST;
+            }
 
-            error_log("Datos recibidos: " . json_encode($datos));
+            error_log("Datos recibidos en crear evento: " . json_encode($datos));
             
             $evento = new Evento();
             $evento->sincronizar($datos);
@@ -143,7 +122,7 @@ class EventosController {
             if(empty($alertas)) {
                 $resultado = $evento->guardar();
 
-                error_log("Resultado de guardar: " . json_encode($resultado));
+                error_log("Resultado de guardar evento: " . json_encode($resultado));
                 
                 echo json_encode([
                     'error' => false,
@@ -151,6 +130,7 @@ class EventosController {
                     'id' => $resultado
                 ]);
             } else {
+                error_log("Alertas de validación: " . json_encode($alertas));
                 echo json_encode([
                     'error' => true,
                     'msg' => $alertas
@@ -161,22 +141,22 @@ class EventosController {
 
     public static function editar($id = null) {
         // Validar autenticación y permisos
-        if(!isset($_SESSION['id'])) {
-            echo json_encode([
-                'error' => true,
-                'msg' => 'Acceso denegado'
-            ]);
-            return;
-        }
+        // if(!isset($_SESSION['id'])) {
+        //     echo json_encode([
+        //         'error' => true,
+        //         'msg' => 'Acceso denegado'
+        //     ]);
+        //     return;
+        // }
         
-        $usuario = Usuario::find($_SESSION['id']);
-        if(!$usuario->admin) {
-            echo json_encode([
-                'error' => true,
-                'msg' => 'Acceso denegado'
-            ]);
-            return;
-        }
+        // $usuario = Usuario::find($_SESSION['id']);
+        // if(!$usuario->admin) {
+        //     echo json_encode([
+        //         'error' => true,
+        //         'msg' => 'Acceso denegado'
+        //     ]);
+        //     return;
+        // }
         
         // Validar ID
         $id = filter_var($id, FILTER_VALIDATE_INT);
@@ -245,22 +225,22 @@ class EventosController {
 
     public static function eliminar($id = null) {
         // Validar autenticación y permisos
-        if(!isset($_SESSION['id'])) {
-            echo json_encode([
-                'error' => true,
-                'msg' => 'Acceso denegado'
-            ]);
-            return;
-        }
+        // if(!isset($_SESSION['id'])) {
+        //     echo json_encode([
+        //         'error' => true,
+        //         'msg' => 'Acceso denegado'
+        //     ]);
+        //     return;
+        // }
         
-        $usuario = Usuario::find($_SESSION['id']);
-        if(!$usuario->admin) {
-            echo json_encode([
-                'error' => true,
-                'msg' => 'Acceso denegado'
-            ]);
-            return;
-        }
+        // $usuario = Usuario::find($_SESSION['id']);
+        // if(!$usuario->admin) {
+        //     echo json_encode([
+        //         'error' => true,
+        //         'msg' => 'Acceso denegado'
+        //     ]);
+        //     return;
+        // }
         
         if($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Obtener ID del evento desde JSON
@@ -277,6 +257,8 @@ class EventosController {
                 ]);
                 return;
             }
+
+            error_log("Intentando eliminar evento con ID: {$id}");
             
             $evento = Evento::find($id);
             if(!$evento) {

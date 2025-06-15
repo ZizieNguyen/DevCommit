@@ -301,24 +301,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Mapa del evento */}
-      <section className="mapa">
-        <h2 className="mapa__titulo">
-          Ubicación del <span>Evento</span>
-        </h2>
-        
-        <iframe 
-          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d12159.055672171031!2d-3.7027189887493075!3d40.41679334470141!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xd42287d6da3df9f%3A0x5a3c45114b3a75f7!2sPuerta%20del%20Sol%2C%20Madrid!5e0!3m2!1ses!2ses!4v1654547597540!5m2!1ses!2ses" 
-          width="100%" 
-          height="100%" 
-          style={{ border: 0 }} 
-          allowFullScreen 
-          loading="lazy" 
-          title="Ubicación del evento"
-          referrerPolicy="no-referrer-when-downgrade">
-        </iframe>
-      </section>
-
       {/* Boletos */}
       <section className="boletos">
         <div className="contenedor">
@@ -333,7 +315,7 @@ export default function HomePage() {
             <div className="boleto boleto--presencial">
               <h4 className="boleto__logo">&#60;DevCommit/&#62;</h4>
               <p className="boleto__plan">Presencial</p>
-              <p className="boleto__precio">€199</p>
+              <p className="boleto__precio">€99</p>
               <div className="boleto__enlace-contenedor">
                 <Link to="/registro" className="boleto__enlace">
                   Comprar Pase
@@ -365,6 +347,26 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Mapa del evento */}
+      <section className="mapa">
+        <h2 className="mapa__titulo">
+          Ubicación del <span>Evento</span>
+        </h2>
+        
+        <iframe 
+          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d12159.055672171031!2d-3.7027189887493075!3d40.41679334470141!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xd42287d6da3df9f%3A0x5a3c45114b3a75f7!2sPuerta%20del%20Sol%2C%20Madrid!5e0!3m2!1ses!2ses!4v1654547597540!5m2!1ses!2ses" 
+          width="100%" 
+          height="100%" 
+          style={{ border: 0 }} 
+          allowFullScreen 
+          loading="lazy" 
+          title="Ubicación del evento"
+          referrerPolicy="no-referrer-when-downgrade">
+        </iframe>
+      </section>
+
+      
     </>
   );
 }

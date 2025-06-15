@@ -100,6 +100,15 @@ export default function Header() {
 
           <nav className="navegacion">
             <NavLink 
+              to="/sobre" 
+              className={({isActive}) => isActive ? 
+                'navegacion__enlace navegacion__enlace--actual' : 'navegacion__enlace'
+              }
+            >
+              Sobre DevCommit
+            </NavLink>
+
+            <NavLink 
               to="/eventos" 
               className={({isActive}) => isActive ? 
                 'navegacion__enlace navegacion__enlace--actual' : 'navegacion__enlace'

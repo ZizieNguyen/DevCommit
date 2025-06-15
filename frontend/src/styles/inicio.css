@@ -1,5 +1,28 @@
 /* Estilos para la página de inicio */
+:root {
+  --primary: #007df4;
+  --primary-dark: #0066cc;
+  --secondary: #00c8c2;
+  --secondary-dark: #00a29d;
+  --negro: #1a1b15;
+  --blanco: #FFFFFF;
+  --gris: #64748B;
+  --gris-claro: #F8FAFC;
+  --rojo: rgb(169, 0, 0);
+  --verde: #02db02;
 
+    /* Sombras */
+  --shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  
+  /* Fuentes */
+  --font-main: 'Outfit', sans-serif;
+  --font-heading: 'Outfit', sans-serif;
+
+  --telefono: 480px;
+  --tablet: 768px;
+  --desktop: 1024px;
+  --xl-desktop: 1200px;
+}
 
 
 /* Sobre DevCommit */
@@ -325,7 +348,7 @@
   height: 40rem;
   width: 30%;
   margin: 2rem auto;
-  position: relative;
+  
 }
 
 iframe {
@@ -350,7 +373,7 @@ iframe {
 /* Boletos */
 .boletos {
   padding: 3rem 0;
-  background-color: #68829e;
+  background-color: var(--blanco);
 }
 
 .titulo {
@@ -365,7 +388,7 @@ iframe {
 }
 
 .titulo--blanco {
-  color: var(--blanco);
+  color: var(--gris);
 }
 
 .boletos__descripcion {
@@ -391,7 +414,7 @@ iframe {
 .boleto {
   background-color: var(--blanco);
   border-radius: 1rem;
-  padding: 3rem;
+  padding: 2rem;
   text-align: center;
   position: relative;
   overflow: hidden;
@@ -420,7 +443,7 @@ iframe {
 }
 
 .boleto--gratis {
-  background-color: #82b496;
+  background-color: #b3de81;
   color: var(--gris-oscuro);
 }
 
@@ -430,7 +453,10 @@ iframe {
   font-size: 2.4rem;
   font-weight: 700;
   margin: 0;
-  color: var(--primary);
+  color: transparent;
+  background: linear-gradient(to right, var(--primary), var(--secondary));
+  background-clip: text;
+  -webkit-background-clip: text;
 }
 
 .boleto__plan {
@@ -444,13 +470,13 @@ iframe {
 .boleto__precio {
   position: relative;
   z-index: 1;
-  font-size: 5rem;
-  font-weight: 900;
+  font-size: 4rem;
+  font-weight: 700;
   margin: 2rem 0;
 }
 
 .boleto__enlace-contenedor {
-  margin-top: 3rem;
+  margin-top: 2rem;
   display: flex;
   justify-content: center;
 }
@@ -458,9 +484,9 @@ iframe {
 .boleto__enlace {
   background-color: var(--primary);
   color: var(--blanco);
-  padding: 1.5rem 4rem;
+  padding: 1rem 2rem;
   border-radius: 0.5rem;
-  font-weight: 700;
+  font-weight: 600;
   text-transform: uppercase;
   text-decoration: none;
   transition: background-color 0.3s;
@@ -497,5 +523,5 @@ iframe {
 }
 
 .texto-blanco {
-  color: var(--blanco);
+  color: var(--gris);
 }

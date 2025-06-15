@@ -60,7 +60,7 @@ export default function AdminEventos() {
     
     try {
       // CAMBIO 3: Usar el endpoint de administración para eliminar
-      const { data } = await clienteAxios.post(`/admin/eventos/eliminar`, { id });
+      const { data } = await clienteAxios.post(`/admin/eventos/eliminar/${id}`);
       
       setAlerta({
         msg: data?.msg || 'Evento eliminado correctamente',
@@ -126,7 +126,7 @@ export default function AdminEventos() {
                     </td>
                     <td className="table__td">
                       {evento.ponente ? 
-                        `${evento.ponente.nombre} ${evento.ponente.apellido}` : 
+                        `${evento.ponente.nombre || ''} ${evento.ponente.apellido || ''}`.trim() : 
                         'Sin ponente asignado'}
                     </td>
                     <td className="table__td--acciones">

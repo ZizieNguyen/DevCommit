@@ -63,15 +63,6 @@ export default function AdminSidebar() {
           </span>
         </NavLink>
         
-        <NavLink 
-          to="/admin/perfil" 
-          className={({isActive}) => isActive ? "dashboard__enlace dashboard__enlace--actual" : "dashboard__enlace"}
-        >
-          <FaUserEdit className="dashboard__icono" />
-          <span className="dashboard__menu-texto">
-            Tu Perfil
-          </span>
-        </NavLink>
       </nav>
     </aside>
   );

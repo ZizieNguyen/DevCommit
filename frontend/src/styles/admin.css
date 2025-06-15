@@ -44,7 +44,10 @@
 }
 
 .dashboard__logo {
-  color: var(--blanco);
+  color: transparent;
+  background: linear-gradient(to right, var(--primary), var(--secondary));
+  background-clip: text;
+  -webkit-background-clip: text;
   font-size: 2rem;
   font-weight: 900;
   text-align: center;
@@ -141,6 +144,7 @@
 }
 
 .dashboard__heading {
+  color: var(--gris-oscuro);
   font-size: 2.6rem;
   font-weight: 700;
   margin-bottom: 1.5rem;
@@ -307,15 +311,15 @@
 
 /* Bloques */
 .bloques {
-  max-width: 120rem;
+  max-width: 100rem;
   margin: 0 auto;
   width: 100%;
 }
 
 .bloques__grid {
   display: grid;
-  margin-top: 2rem;
-  gap: 1rem;
+  margin-top: 1rem;
+  gap: 3rem;
   grid-template-columns: 1fr;
 }
 
@@ -365,11 +369,11 @@
 
 @media (min-width: 768px) {
   .bloques__grid {
-    margin-top: 5rem;
+    margin-top: 1rem;
   }
 
   .bloques {
-    margin-top: 10rem;
+    margin-top: 5rem;
   }
 
    .bloque {
@@ -584,8 +588,8 @@
 .listado-ponentes__ponente {
   color: var(--primary);
   border: 1px solid var(--primary);
-  padding: 1rem;
-  border-radius: 1rem;
+  padding: 0;
+  border-radius: 0.5rem;
   text-align: center;
   transition: all 0.3s ease;
 }
@@ -599,7 +603,7 @@
 .listado-ponentes__ponente--seleccionado {
   color: var(--blanco);
   border: 1px solid var(--primary);
-  padding: 1rem;
+  padding: 0;
   border-radius: 1rem;
   text-align: center;
   background-color: var(--primary);
@@ -613,7 +617,7 @@
 /* Formularios */
 .formulario {
   background-color: var(--blanco);
-  padding: 2rem 5rem 2rem 5rem;
+  padding: 2rem 5rem;
   border-radius: 1rem;
   box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
 }
@@ -854,7 +858,7 @@
 .horas__hora--seleccionada,
 .horas__hora--deshabilitada {
   color: var(--primary);
-  border: 1px solid var(--primary);
+  border: 0.5px solid var(--primary);
   border-radius: 1rem;
   padding: 0.1rem;
   text-align: center;
@@ -926,14 +930,14 @@
   overflow-y: auto;
   border: 1px solid var(--gris-claro);
   border-radius: 0.5rem;
-  padding: 0.5rem;
+  padding: 0;
   margin-top: 0.5rem;
 }
 
 .listado-ponentes__no-resultado {
   text-align: center;
   color: var(--gris);
-  padding: 1rem;
+  padding: 0;
 }
 
 /* Para asegurar que el formulario se vea correctamente en móviles */

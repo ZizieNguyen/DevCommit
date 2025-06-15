@@ -22,7 +22,7 @@ export default function FormularioEvento({ evento = {} }) {
   const [ponenteSeleccionado, setPonenteSeleccionado] = useState(null);
   const [cargando, setCargando] = useState(true);
   
-  // Efecto para cargar datos iniciales
+  // Primer useEffect para cargar datos iniciales desde API
   useEffect(() => {
     const cargarDatos = async () => {
       try {
@@ -40,123 +40,127 @@ export default function FormularioEvento({ evento = {} }) {
         setDias(diasRes.data?.dias || []);
         setHoras(horasRes.data?.horas || []);
         
-        // Cargar TODOS los ponentes (no solo primera página)
+        // Cargar todos los ponentes de todas las páginas
         await cargarTodosLosPonentes();
         
-        // Si estamos editando, cargar el ponente
-        if (evento?.ponente_id) {
-          try {
-            // Intentar ambos formatos de URL para obtener el ponente
-            let ponenteRes;
-            try {
-              // Primero intentar con formato de ruta
-              ponenteRes = await clienteAxios(`/api/ponente/${evento.ponente_id}`);
-            } catch  {
-              // Si falla, intentar con formato de query string
-              ponenteRes = await clienteAxios(`/api/ponente?id=${evento.ponente_id}`);
-            }
-            
-            console.log("Datos ponente específico:", ponenteRes.data);
-            setPonenteSeleccionado(ponenteRes.data);
-          } catch (error) {
-            console.error('Error al cargar datos del ponente:', error);
-          }
+        // Si estamos editando y ya tenemos categoría y día, cargar horas disponibles
+        if (Object.keys(evento).length > 0 && evento.categoria_id && evento.dia_id) {
+          await buscarEventos(evento.dia_id, evento.categoria_id);
         }
         
-        // Cargar eventos-horario si ya tenemos categoría y día (caso de edición)
-        if (evento.categoria_id && evento.dia_id) {
-          try {
-            await buscarEventos(evento.dia_id, evento.categoria_id);
-          } catch (error) {
-            console.error('Error al cargar eventos por horario:', error);
-          }
-        }
+        setCargando(false);
       } catch (error) {
-        console.error('Error general al cargar datos:', error);
-      } finally {
+        console.error('Error al cargar datos iniciales:', error);
         setCargando(false);
       }
     };
     
     cargarDatos();
-  }, []);
+  }, []); // Solo se ejecuta al montar el componente
+  
+  // Segundo useEffect para actualizar el formulario cuando cambia el evento
+  useEffect(() => {
+    // Solo actualizar si hay datos en el evento (no es un objeto vacío)
+    if (Object.keys(evento).length > 0) {
+      console.log("Actualizando formulario con datos del evento:", evento);
+      
+      // Actualizar todos los estados con los valores del evento
+      setNombre(evento.nombre || '');
+      setDescripcion(evento.descripcion || '');
+      setCategoriaId(evento.categoria_id || '');
+      setDiaId(evento.dia_id || '');
+      setHoraId(evento.hora_id || '');
+      setDisponibles(evento.disponibles || '');
+      
+      // Actualizar el ID del ponente si existe
+      if (evento.ponente_id) {
+        setPonenteId(evento.ponente_id);
+      }
+      
+      // Si el evento ya tiene un ponente asignado directamente
+      if (evento.ponente) {
+        console.log("Estableciendo ponente desde datos del evento:", evento.ponente);
+        setPonenteSeleccionado(evento.ponente);
+      }
+      
+      // Si tenemos categoría y día, buscar eventos para actualizar horas disponibles
+      if (evento.categoria_id && evento.dia_id) {
+        console.log("Buscando eventos para día y categoría del evento a editar");
+        buscarEventos(evento.dia_id, evento.categoria_id);
+      }
+    }
+  }, [evento]); // Este efecto se ejecuta cuando cambia el prop evento
   
   // Función para cargar todos los ponentes (posiblemente múltiples páginas)
   const cargarTodosLosPonentes = async () => {
-  try {
-    console.log("Iniciando carga de todos los ponentes");
-    
-    // Arreglo para almacenar todos los ponentes de todas las páginas
-    let todosLosPonentes = [];
-    
-    // Iniciar en la página 1
-    let paginaActual = 1;
-    let hayMasPaginas = true;
-    let ponentesPorPagina = 0;
-    
-    // Seguir cargando páginas mientras haya más
-    while (hayMasPaginas) {
-      console.log(`Cargando ponentes - página ${paginaActual}`);
+    try {
+      console.log("Iniciando carga de todos los ponentes");
       
-      // Cargar la página actual
-      const respuesta = await clienteAxios(`/api/ponentes?page=${paginaActual}`);
+      // Arreglo para almacenar todos los ponentes de todas las páginas
+      let todosLosPonentes = [];
       
-      // Extraer ponentes de esta página
-      let ponentesDePagina = [];
+      // Iniciar en la página 1
+      let paginaActual = 1;
+      let hayMasPaginas = true;
+      let ponentesPorPagina = 0;
       
-      if (respuesta.data) {
-        if (Array.isArray(respuesta.data)) {
-          ponentesDePagina = respuesta.data;
-        } else if (respuesta.data.ponentes && Array.isArray(respuesta.data.ponentes)) {
-          ponentesDePagina = respuesta.data.ponentes;
-        } else if (respuesta.data.data && Array.isArray(respuesta.data.data)) {
-          ponentesDePagina = respuesta.data.data;
+      // Seguir cargando páginas mientras haya más
+      while (hayMasPaginas) {
+        console.log(`Cargando ponentes - página ${paginaActual}`);
+        
+        // Cargar la página actual
+        const respuesta = await clienteAxios(`/api/ponentes?page=${paginaActual}`);
+        
+        // Extraer ponentes de esta página
+        let ponentesDePagina = [];
+        
+        if (respuesta.data) {
+          if (Array.isArray(respuesta.data)) {
+            ponentesDePagina = respuesta.data;
+          } else if (respuesta.data.ponentes && Array.isArray(respuesta.data.ponentes)) {
+            ponentesDePagina = respuesta.data.ponentes;
+          } else if (respuesta.data.data && Array.isArray(respuesta.data.data)) {
+            ponentesDePagina = respuesta.data.data;
+          }
+        }
+        
+        // Si es la primera página, guardar cuántos ponentes hay por página normalmente
+        if (paginaActual === 1) {
+          ponentesPorPagina = ponentesDePagina.length;
+          console.log(`Detectados ${ponentesPorPagina} ponentes por página`);
+        }
+        
+        console.log(`Página ${paginaActual}: ${ponentesDePagina.length} ponentes encontrados`);
+        
+        todosLosPonentes = [...todosLosPonentes, ...ponentesDePagina];
+
+        if (ponentesDePagina.length === 0 || 
+            (ponentesPorPagina > 0 && ponentesDePagina.length < ponentesPorPagina)) {
+          hayMasPaginas = false;
+          console.log("No hay más páginas para cargar");
+        } else {
+          paginaActual++;
         }
       }
       
-      // Si es la primera página, guardar cuántos ponentes hay por página normalmente
-      if (paginaActual === 1) {
-        ponentesPorPagina = ponentesDePagina.length;
-        console.log(`Detectados ${ponentesPorPagina} ponentes por página`);
-      }
+      console.log(`Carga completa. Total de ponentes cargados: ${todosLosPonentes.length}`);
       
-      console.log(`Página ${paginaActual}: ${ponentesDePagina.length} ponentes encontrados`);
+      const ponentesFormateados = todosLosPonentes.map(ponente => {
+        const nombreCompleto = `${ponente.nombre || ''} ${ponente.apellido || ''}`.trim();
+        return {
+          nombre: nombreCompleto,
+          id: ponente.id,
+          datos: ponente
+        };
+      });
       
-      // Agregar los ponentes de esta página al arreglo total
-      todosLosPonentes = [...todosLosPonentes, ...ponentesDePagina];
+      console.log("Todos los ponentes formateados:", ponentesFormateados);
+      setPonentes(ponentesFormateados);
       
-      // Determinar si hay más páginas
-      // Si la página actual tiene menos ponentes que el tamaño habitual de página o está vacía, 
-      // entonces es la última página
-      if (ponentesDePagina.length === 0 || 
-          (ponentesPorPagina > 0 && ponentesDePagina.length < ponentesPorPagina)) {
-        hayMasPaginas = false;
-        console.log("No hay más páginas para cargar");
-      } else {
-        // Pasar a la siguiente página
-        paginaActual++;
-      }
+    } catch (error) {
+      console.error("Error al cargar todos los ponentes:", error);
     }
-    
-    console.log(`Carga completa. Total de ponentes cargados: ${todosLosPonentes.length}`);
-    
-    // Formatear todos los ponentes una vez que los tenemos todos
-    const ponentesFormateados = todosLosPonentes.map(ponente => {
-      const nombreCompleto = `${ponente.nombre || ''} ${ponente.apellido || ''}`.trim();
-      return {
-        nombre: nombreCompleto,
-        id: ponente.id,
-        datos: ponente
-      };
-    });
-    
-    console.log("Todos los ponentes formateados:", ponentesFormateados);
-    setPonentes(ponentesFormateados);
-    
-  } catch (error) {
-    console.error("Error al cargar todos los ponentes:", error);
-  }
-};
+  };
   
   // Función para buscar eventos por día y categoría
   const buscarEventos = async (diaId, categoriaId) => {
@@ -260,7 +264,7 @@ export default function FormularioEvento({ evento = {} }) {
     }
   }, [busqueda, ponentes]);
   
-  // Manejador de búsqueda (ahora solo actualiza el estado de búsqueda)
+  // Manejador de búsqueda
   const handleBusquedaChange = (e) => {
     setBusqueda(e.target.value);
   };
@@ -442,7 +446,7 @@ export default function FormularioEvento({ evento = {} }) {
           {/* Mostrar ponente seleccionado cuando existe y no hay búsqueda */}
           {ponenteSeleccionado && !busqueda.length && (
             <p className="listado-ponentes__ponente listado-ponentes__ponente--seleccionado">
-              {`${ponenteSeleccionado.nombre} ${ponenteSeleccionado.apellido}`}
+              {`${ponenteSeleccionado.nombre || ''} ${ponenteSeleccionado.apellido || ''}`.trim()}
             </p>
           )}
 
