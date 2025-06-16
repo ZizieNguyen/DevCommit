@@ -2,6 +2,14 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { FaCalendarAlt, FaCode, FaUsers, FaMicrophone } from 'react-icons/fa';
 import { clienteAxios } from '../config/axios';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Navigation, Pagination, Autoplay } from 'swiper/modules';
+import EventoCard from '../components/EventoCard';
+
+// Importar estilos de Swiper
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
 import '../styles/inicio.css';
 
 // Componente de Spinner simple
@@ -13,41 +21,60 @@ const Spinner = () => (
   </div>
 );
 
-// Componente EventoCard simple
-const EventoCard = ({ evento }) => (
-  <div className="evento">
-    <div className="evento__contenido">
-      <p className="evento__fecha">{evento.dia?.nombre || 'Próximamente'}</p>
-      <h3 className="evento__nombre">{evento.nombre}</h3>
-      <p className="evento__descripcion">{evento.descripcion}</p>
-      <div className="evento__autor">Por: {evento.ponente?.nombre} {evento.ponente?.apellido}</div>
-      <p className="evento__categoria">{evento.categoria?.nombre}</p>
-      <div className="evento__disponibles">
-        <span className="evento__disponibles-cantidad">{evento.disponibles}</span> lugares disponibles
-      </div>
-      <Link to={`/eventos/${evento.id}`} className="evento__enlace">Ver Detalles</Link>
-    </div>
-  </div>
-);
+
 
 // Componente PonenteCard simple
-const PonenteCard = ({ ponente }) => (
-  <div className="ponente">
-    <div className="ponente__imagen">
-      <picture>
-        <source srcSet={`/img/speakers/${ponente.imagen || 'default_speaker'}.webp`} type="image/webp" />
-        <source srcSet={`/img/speakers/${ponente.imagen || 'default_speaker'}.png`} type="image/png" />
-        <img src={`/img/speakers/${ponente.imagen || 'default_speaker'}.png`} alt={`${ponente.nombre} ${ponente.apellido}`} />
-      </picture>
+const PonenteCard = ({ ponente }) => {
+  // Determinar la URL de imagen correcta
+  const getImageUrl = () => {
+    if (ponente.ruta_imagen) {
+      return `${import.meta.env.VITE_API_URL || ''}${ponente.ruta_imagen}`;
+    }
+    
+    if (ponente.imagen) {
+      if (ponente.imagen === 'default_speaker') {
+        return `${import.meta.env.VITE_API_URL || ''}/img/speakers/default_speaker.png`;
+      }
+      
+      if (ponente.imagen === 'cdf2451e80e0243bb3a78d389e301efa') {
+        return `${import.meta.env.VITE_API_URL || ''}/img/speakers/cdf2451e80e0243bb3a78d389e301efa.jpg`;
+      }
+      
+      return `${import.meta.env.VITE_API_URL || ''}/img/speakers/${ponente.imagen}`;
+    }
+    
+    return `${import.meta.env.VITE_API_URL || ''}/img/speakers/default_speaker.png`;
+  };
+
+  return (
+    <div className="ponente">
+      <div className="ponente__imagen">
+        <img 
+          src={getImageUrl()}
+          alt={`${ponente.nombre} ${ponente.apellido}`}
+          onError={(e) => {
+            e.target.src = `${import.meta.env.VITE_API_URL || ''}/img/speakers/default_speaker.png`;
+          }}
+          className="ponente__img"
+        />
+      </div>
+      <div className="ponente__contenido">
+        <h3 className="ponente__nombre">{ponente.nombre} {ponente.apellido}</h3>
+        <p className="ponente__ubicacion">{ponente.ciudad}, {ponente.pais}</p>
+        
+        {ponente.tags && (
+          <div className="ponente__tags">
+            {ponente.tags.split(',').map((tag, index) => (
+              <span key={`${ponente.id || index}-tag-${index}`} className="ponente__tag">
+                {tag.trim()}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
-    <div className="ponente__contenido">
-      <h3 className="ponente__nombre">{ponente.nombre} {ponente.apellido}</h3>
-      <p className="ponente__ubicacion">{ponente.ciudad}, {ponente.pais}</p>
-      <div className="ponente__tags">{ponente.tags}</div>
-      <Link to={`/ponentes/${ponente.id}`} className="ponente__enlace">Ver Perfil</Link>
-    </div>
-  </div>
-);
+  );
+};
 
 export default function HomePage() {
   const [eventos, setEventos] = useState([]);
@@ -68,13 +95,25 @@ export default function HomePage() {
         
         // 1. Cargar eventos desde la API
         try {
-          const { data: eventosData } = await clienteAxios.get('/api/eventos?limite=3');
+          const { data: eventosData } = await clienteAxios.get('/api/eventos?limit=6');
           
-          if (eventosData && Array.isArray(eventosData)) {
-            setEventos(eventosData);
-          } else {
-            console.warn('Formato de respuesta de eventos inesperado:', eventosData);
-            setEventos([]);
+          if (eventosData) {
+            console.log('Datos de eventos recibidos:', eventosData);
+            
+            // Si la respuesta tiene formato {eventos: Array(), paginacion: {...}}
+            if (eventosData.eventos && Array.isArray(eventosData.eventos)) {
+              console.log('Eventos cargados correctamente:', eventosData.eventos.length);
+              setEventos(eventosData.eventos);
+            } 
+            // Si la respuesta es directamente un array
+            else if (Array.isArray(eventosData)) {
+              console.log('Eventos cargados como array:', eventosData.length);
+              setEventos(eventosData);
+            } 
+            else {
+              console.warn('Formato de respuesta de eventos inesperado:', eventosData);
+              setEventos([]);
+            }
           }
         } catch (errorEventos) {
           console.error('Error cargando eventos:', errorEventos);
@@ -83,9 +122,14 @@ export default function HomePage() {
         
         // 2. Cargar ponentes desde la API
         try {
-          const { data: ponentesData } = await clienteAxios.get('/api/ponentes?limite=4');
+          const { data: ponentesData } = await clienteAxios.get('/api/ponentes?limite=8');
           
-          if (ponentesData && Array.isArray(ponentesData)) {
+          // CORREGIDO: Verificar si la respuesta tiene un objeto con la propiedad 'ponentes'
+          if (ponentesData && ponentesData.ponentes && Array.isArray(ponentesData.ponentes)) {
+            console.log('Ponentes cargados correctamente:', ponentesData.ponentes.length);
+            setPonentes(ponentesData.ponentes);
+          } else if (Array.isArray(ponentesData)) {
+            // Formato alternativo, por si la API cambia
             setPonentes(ponentesData);
           } else {
             console.warn('Formato de respuesta de ponentes inesperado:', ponentesData);
@@ -140,7 +184,6 @@ export default function HomePage() {
 
   return (
     <>
-
       {/* Sección Sobre DevCommit */}
       <section className="sobre-devcommit">
         <div className="contenedor">
@@ -233,41 +276,66 @@ export default function HomePage() {
 
       {/* Eventos destacados */}
       <section id="eventos" className="eventos">
-        <div className="contenedor">
-          <h2 className="titulo">Próximos <span>Eventos</span></h2>
-          <p className="eventos__descripcion">
-            Descubre los workshops y conferencias impartidos por expertos que están transformando la industria
-          </p>
+  <div className="contenedor">
+    <h2 className="titulo">Próximos <span>Eventos</span></h2>
+    <p className="eventos__descripcion">
+      Descubre los workshops y conferencias impartidos por expertos que están transformando la industria
+    </p>
 
-          {error && (
-            <div className="alerta alerta--error">
-              {error}
-            </div>
-          )}
+    {error && (
+      <div className="alerta alerta--error">
+        {error}
+      </div>
+    )}
 
-          {loading ? (
-            <div className="eventos__spinner">
-              <Spinner />
-            </div>
-          ) : eventos.length > 0 ? (
-            <div className="eventos__grid">
-              {eventos.map(evento => (
-                <EventoCard key={evento.id} evento={evento} />
-              ))}
-            </div>
-          ) : (
-            <p className="eventos__no-eventos">
-              No hay eventos próximos disponibles en este momento.
-            </p>
-          )}
+    {loading ? (
+      <div className="eventos__spinner">
+        <Spinner />
+      </div>
+    ) : eventos.length > 0 ? (
+      <div className="eventos__swiper">
+        <Swiper
+          modules={[Navigation, Pagination, Autoplay]}
+          spaceBetween={30}
+          slidesPerView={1}
+          navigation
+          pagination={{ clickable: true }}
+          autoplay={{ delay: 3000, disableOnInteraction: false }}
+          breakpoints={{
+            640: {
+              slidesPerView: 1,
+            },
+            768: {
+              slidesPerView: 2,
+            },
+            1024: {
+              slidesPerView: 3,
+            }
+          }}
+        >
+          {eventos.map(evento => (
+            <SwiperSlide key={`evento-${evento.id}`}>
+              {/* Envuelve el EventoCard en un div con clase personalizada */}
+              <div className="evento-homepage">
+                <EventoCard evento={evento} compact={true} />
+              </div>
+            </SwiperSlide>
+          ))}
+        </Swiper>
+      </div>
+    ) : (
+      <p className="eventos__no-eventos">
+        No hay eventos próximos disponibles en este momento.
+      </p>
+    )}
 
-          <div className="eventos__enlace">
-            <Link to="/eventos" className="boton">
-              Ver Todos los Eventos
-            </Link>
-          </div>
-        </div>
-      </section>
+    <div className="eventos__enlace">
+      <Link to="/eventos" className="boton">
+        Ver Todos los Eventos
+      </Link>
+    </div>
+  </div>
+</section>
 
       {/* Ponentes destacados */}
       <section className="ponentes">
@@ -282,10 +350,32 @@ export default function HomePage() {
               <Spinner />
             </div>
           ) : ponentes.length > 0 ? (
-            <div className="ponentes__grid">
-              {ponentes.map(ponente => (
-                <PonenteCard key={ponente.id} ponente={ponente} />
-              ))}
+            <div className="ponentes__swiper">
+              <Swiper
+                modules={[Navigation, Pagination, Autoplay]}
+                spaceBetween={30}
+                slidesPerView={1}
+                navigation
+                pagination={{ clickable: true }}
+                autoplay={{ delay: 3000, disableOnInteraction: false }}
+                breakpoints={{
+                  640: {
+                    slidesPerView: 2,
+                  },
+                  768: {
+                    slidesPerView: 3,
+                  },
+                  1024: {
+                    slidesPerView: 4,
+                  }
+                }}
+              >
+                {ponentes.map((ponente, index) => (
+                  <SwiperSlide key={`ponente-${ponente.id || index}`}>
+                    <PonenteCard ponente={ponente} />
+                  </SwiperSlide>
+                ))}
+              </Swiper>
             </div>
           ) : (
             <p className="ponentes__no-ponentes">
@@ -365,8 +455,6 @@ export default function HomePage() {
           referrerPolicy="no-referrer-when-downgrade">
         </iframe>
       </section>
-
-      
     </>
   );
 }

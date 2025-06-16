@@ -69,21 +69,32 @@ class ActiveRecord {
     public function atributos() {
         $atributos = [];
         foreach(static::$columnasDB as $columna) {
-            if($columna === 'id') continue;
+            // Quitar esta línea que excluye el ID
+            // if($columna === 'id') continue;
             $atributos[$columna] = $this->$columna;
+        }
+        return $atributos;
+    }
+
+    // Añadir este nuevo método para usar solo en operaciones DB (líneas 72-80)
+    public function atributosParaDB() {
+        $atributos = $this->atributos();
+        if (!is_null($this->id)) {
+            unset($atributos['id']); // Solo quitar ID al insertar registros nuevos
         }
         return $atributos;
     }
 
     // Sanitizar los datos antes de guardarlos en la BD
     public function sanitizarAtributos() {
-        $atributos = $this->atributos();
-        $sanitizado = [];
-        foreach($atributos as $key => $value ) {
-            $sanitizado[$key] = self::$db->escape_string($value);
-        }
-        return $sanitizado;
+    // Cambiar a atributosParaDB para operaciones de base de datos
+    $atributos = $this->atributosParaDB();
+    $sanitizado = [];
+    foreach($atributos as $key => $value) {
+        $sanitizado[$key] = self::$db->escape_string($value);
     }
+    return $sanitizado;
+}
 
     // Sincroniza BD con Objetos en memoria
     public function sincronizar($args=[]) { 

@@ -235,7 +235,7 @@
 
 .eventos__enlace {
   text-align: center;
-  margin-top: 4rem;
+  margin-top: 0;
 }
 
 /* Ponentes */
@@ -379,7 +379,7 @@ iframe {
 .titulo {
   font-size: 3rem;
   text-align: center;
-  margin: 0 0 3rem 0;
+  margin: 0;
 }
 
 .titulo span {
@@ -509,10 +509,10 @@ iframe {
 .boton {
   background-color: var(--primary);
   color: var(--blanco);
-  padding: 1.5rem 4rem;
-  font-weight: 700;
+  padding: 0.5rem 1rem;
+  font-weight: 600;
   text-transform: uppercase;
-  font-size: 1.8rem;
+  font-size: 1.5rem;
   border-radius: 0.5rem;
   text-decoration: none;
   transition: background-color 0.3s;
@@ -524,4 +524,98 @@ iframe {
 
 .texto-blanco {
   color: var(--gris);
+}
+
+
+/* Estilos para Swiper */
+.ponente-card {
+  background-color: var(--blanco);
+  border-radius: 0.8rem;
+  overflow: hidden;
+  box-shadow: 0 0.3rem 0.8rem rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  text-decoration: none;
+  color: inherit;
+  height: 100%;
+}
+
+.ponente-card:hover {
+  transform: translateY(-0.3rem);
+  box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.15);
+}
+
+.ponente-card__imagen {
+  width: 100%;
+  height: 20rem;
+  overflow: hidden;
+}
+
+.ponente-card__imagen img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  transition: transform 0.5s ease;
+}
+
+.ponente-card:hover .ponente-card__imagen img {
+  transform: scale(1.05);
+}
+
+.ponente-card__contenido {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.ponente-card__nombre {
+  font-size: 1.8rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--primary);
+  line-height: 1.2;
+}
+
+.ponente-card__ubicacion {
+  font-size: 1.3rem;
+  color: var(--gris);
+  margin: 0.5rem 0;
+}
+
+.ponente-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.8rem;
+}
+
+.ponente-card__tag {
+  display: inline-block;
+  background-color: var(--primary);
+  color: var(--blanco);
+  padding: 0.2rem 0.6rem;
+  border-radius: 0.3rem;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.ponente-card__tag--more {
+  background-color: var(--gris);
+}
+
+/* Ajustes específicos para Swiper */
+.swiper-slide .ponente-card {
+  height: 100%;
+}
+
+.swiper-slide .ponente-card__imagen {
+  height: 18rem;
+}
+
+/* Ajustar espacio debajo del carrusel */
+.ponentes__swiper {
+  margin-bottom: 2rem;
 }

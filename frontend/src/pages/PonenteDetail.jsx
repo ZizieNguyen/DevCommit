@@ -29,23 +29,53 @@ export default function PonenteDetail() {
     const obtenerDatos = async () => {
       try {
         setCargando(true);
-        
-        // Obtener datos del ponente
-        const { data: ponenteData } = await clienteAxios(`/ponentes/${id}`);
-        setPonente(ponenteData);
-        
-        // Obtener eventos relacionados con el ponente
-        const { data: eventosData } = await clienteAxios('/eventos', { 
-          params: { ponente: id } 
-        });
-        setEventos(eventosData);
-        
         setAlerta({});
+        
+        console.log(`Obteniendo datos del ponente ID:`, id);
+        
+        // Validar que el ID sea un número válido
+        if (!id || id === 'undefined' || id === 'null') {
+          throw new Error("ID no válido");
+        }
+        
+        // Obtener el ponente directamente por su ID
+        try {
+          const { data: ponenteData } = await clienteAxios.get(`/api/ponente/${id}`);
+          
+          if (ponenteData && !ponenteData.error) {
+            console.log("Ponente encontrado:", ponenteData);
+            setPonente(ponenteData);
+            
+            // Intentar cargar eventos relacionados con el ponente
+            try {
+              const { data: eventosData } = await clienteAxios.get('/api/eventos-ponente', {
+                params: { ponente_id: id }
+              });
+              
+              if (Array.isArray(eventosData) && eventosData.length > 0) {
+                console.log("Eventos encontrados:", eventosData.length);
+                setEventos(eventosData);
+              } else {
+                console.log("No se encontraron eventos para este ponente");
+                setEventos([]);
+              }
+            } catch (errorEventos) {
+              console.error("Error al cargar eventos:", errorEventos);
+              setEventos([]);
+            }
+          } else {
+            throw new Error(ponenteData?.msg || "Ponente no encontrado");
+          }
+        } catch (error) {
+          console.error("Error al cargar el ponente:", error);
+          throw new Error("No se pudo encontrar el ponente solicitado");
+        }
+        
       } catch (error) {
-        console.error(error);
+        console.error("Error al cargar el ponente:", error);
         setAlerta({
           tipo: 'error',
-          mensaje: 'Error al cargar la información del ponente'
+          mensaje: error.message || 'No se encontró información del ponente solicitado'
         });
       } finally {
         setCargando(false);
@@ -54,6 +84,54 @@ export default function PonenteDetail() {
     
     obtenerDatos();
   }, [id]);
+  
+  // Función para generar biografía
+  const generarBiografia = (ponente) => {
+    if (!ponente) return '';
+    
+    let especialidades = ponente.tags ? 
+      ponente.tags.split(',').map(tag => tag.trim()).join(', ') : 
+      'tecnología';
+      
+    return `${ponente.nombre} ${ponente.apellido} es un destacado profesional en el campo de ${especialidades}. Actualmente reside en ${ponente.ciudad}, ${ponente.pais} y participa como ponente en conferencias y eventos de tecnología.`;
+  };
+  
+  // Función para manejar errores de carga de imágenes
+  const manejarErrorImagen = (e, ponente) => {
+    console.log(`Error cargando imagen: ${e.target.src}`);
+    
+    // Verificar si es default_speaker sin extensión
+    if (e.target.src.includes('default_speaker') && !e.target.src.includes('.png')) {
+      e.target.src = `${import.meta.env.VITE_API_URL || ''}/img/speakers/default_speaker.png`;
+      return;
+    }
+    
+    // Si la URL ya incluye default_speaker.png, no intentar de nuevo
+    if (e.target.src.includes('default_speaker.png')) {
+      return;
+    }
+    
+    // Para el caso específico de cdf2451e80e0243bb3a78d389e301efa
+    if (ponente?.imagen === 'cdf2451e80e0243bb3a78d389e301efa') {
+      e.target.src = `${import.meta.env.VITE_API_URL || ''}/img/speakers/cdf2451e80e0243bb3a78d389e301efa.jpg`;
+      return;
+    }
+    
+    // Para default_speaker (sin extensión)
+    if (ponente?.imagen === 'default_speaker') {
+      e.target.src = `${import.meta.env.VITE_API_URL || ''}/img/speakers/default_speaker.png`;
+      return;
+    }
+    
+    // Si la ruta no tiene extensión pero el archivo sí
+    if (ponente?.ruta_imagen && !ponente.ruta_imagen.includes('.') && ponente.imagen) {
+      e.target.src = `${import.meta.env.VITE_API_URL || ''}/img/speakers/${ponente.imagen}.jpg`;
+      return;
+    }
+    
+    // Última opción: usar default con extensión explícita
+    e.target.src = `${import.meta.env.VITE_API_URL || ''}/img/speakers/default_speaker.png`;
+  };
   
   if (cargando) return <Spinner />;
   
@@ -76,6 +154,16 @@ export default function PonenteDetail() {
     );
   }
   
+  // Parsear las redes sociales
+  let redesObj = {};
+  try {
+    redesObj = typeof ponente.redes === 'string' 
+      ? JSON.parse(ponente.redes) 
+      : (ponente.redes || {});
+  } catch (error) {
+    console.error("Error al parsear redes sociales:", error);
+  }
+  
   return (
     <main className="ponente-detalle">
       {alerta.mensaje && (
@@ -90,20 +178,14 @@ export default function PonenteDetail() {
         <div className="ponente-card__contenido">
           <div className="ponente-card__imagen">
             <img 
-              src={`/img/speakers/default_speaker.jpg`} // Imagen por defecto como primera opción
+              src={
+                ponente.ruta_imagen ? 
+                `${import.meta.env.VITE_API_URL || ''}${ponente.ruta_imagen}` : 
+                `${import.meta.env.VITE_API_URL || ''}/img/speakers/default_speaker.png`
+              }
               alt={`${ponente.nombre} ${ponente.apellido}`}
-              onLoad={(e) => {
-                // Si la imagen por defecto cargó bien, intentar cargar la imagen real del ponente
-                if (ponente.imagen && ponente.imagen !== 'default_speaker') {
-                  // Solo cambiar la imagen si existe una específica para este ponente
-                  const imgReal = new Image();
-                  imgReal.onload = () => {
-                    e.target.src = imgReal.src;
-                  };
-                  // No establecer onError para la imagen real para evitar bucles
-                  imgReal.src = `${import.meta.env.VITE_API_URL || ''}/img/speakers/${ponente.imagen}.png`;
-                }
-              }}
+              onError={(e) => manejarErrorImagen(e, ponente)}
+              className="ponente-card__img"
             />
           </div>
           <div className="ponente-card__info">
@@ -128,7 +210,7 @@ export default function PonenteDetail() {
                 <div className="ponente-card__tags">
                   {ponente.tags.split(',').map((tag, index) => (
                     <span 
-                      key={index}
+                      key={`tag-${index}`}
                       className="ponente-card__tag"
                     >
                       {tag.trim()}
@@ -141,17 +223,17 @@ export default function PonenteDetail() {
             <div className="ponente-card__biografia">
               <h3 className="ponente-card__subtitulo">Biografía:</h3>
               <p className="ponente-card__texto">
-                {ponente.biografia || "No hay información biográfica disponible para este ponente."}
+                {ponente.biografia || generarBiografia(ponente)}
               </p>
             </div>
             
-            {ponente.redes && Object.values(ponente.redes).some(red => red) && (
+            {redesObj && Object.values(redesObj).some(red => red) && (
               <div className="ponente-card__redes">
                 <h3 className="ponente-card__subtitulo">Redes Sociales:</h3>
                 <div className="ponente-card__enlaces">
-                  {ponente.redes.facebook && (
+                  {redesObj.facebook && (
                     <a 
-                      href={`https://facebook.com/${ponente.redes.facebook}`} 
+                      href={`https://facebook.com/${redesObj.facebook}`} 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="ponente-card__red ponente-card__red--facebook"
@@ -159,9 +241,9 @@ export default function PonenteDetail() {
                       Facebook
                     </a>
                   )}
-                  {ponente.redes.twitter && (
+                  {redesObj.twitter && (
                     <a 
-                      href={`https://twitter.com/${ponente.redes.twitter}`} 
+                      href={`https://twitter.com/${redesObj.twitter}`} 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="ponente-card__red ponente-card__red--twitter"
@@ -169,9 +251,9 @@ export default function PonenteDetail() {
                       Twitter
                     </a>
                   )}
-                  {ponente.redes.youtube && (
+                  {redesObj.youtube && (
                     <a 
-                      href={`https://youtube.com/${ponente.redes.youtube}`} 
+                      href={`https://youtube.com/${redesObj.youtube}`} 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="ponente-card__red ponente-card__red--youtube"
@@ -179,9 +261,9 @@ export default function PonenteDetail() {
                       YouTube
                     </a>
                   )}
-                  {ponente.redes.instagram && (
+                  {redesObj.instagram && (
                     <a 
-                      href={`https://instagram.com/${ponente.redes.instagram}`} 
+                      href={`https://instagram.com/${redesObj.instagram}`} 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="ponente-card__red ponente-card__red--instagram"
@@ -189,9 +271,9 @@ export default function PonenteDetail() {
                       Instagram
                     </a>
                   )}
-                  {ponente.redes.tiktok && (
+                  {redesObj.tiktok && (
                     <a 
-                      href={`https://tiktok.com/@${ponente.redes.tiktok}`} 
+                      href={`https://tiktok.com/@${redesObj.tiktok}`} 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="ponente-card__red ponente-card__red--tiktok"
@@ -199,9 +281,9 @@ export default function PonenteDetail() {
                       TikTok
                     </a>
                   )}
-                  {ponente.redes.github && (
+                  {redesObj.github && (
                     <a 
-                      href={`https://github.com/${ponente.redes.github}`} 
+                      href={`https://github.com/${redesObj.github}`} 
                       target="_blank" 
                       rel="noopener noreferrer"
                       className="ponente-card__red ponente-card__red--github"
@@ -220,7 +302,7 @@ export default function PonenteDetail() {
       <div className="eventos-ponente">
         <h2 className="eventos-ponente__heading">Eventos con {ponente.nombre}</h2>
         
-        {eventos.length === 0 ? (
+        {!Array.isArray(eventos) || eventos.length === 0 ? (
           <p className="eventos-ponente__no-eventos">
             Este ponente no tiene eventos programados actualmente.
           </p>
@@ -228,7 +310,7 @@ export default function PonenteDetail() {
           <div className="eventos-ponente__grid">
             {eventos.map(evento => (
               <div 
-                key={evento.id}
+                key={`evento-${evento.id || Math.random().toString(36).substr(2, 9)}`}
                 className="evento-card"
               >
                 <div className={`evento-card__categoria evento-card__categoria--${evento.categoria_id}`}></div>

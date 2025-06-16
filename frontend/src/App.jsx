@@ -8,7 +8,9 @@ import SobreDevCommit from './pages/SobreDevCommit';
 import Paquetes from './pages/Paquetes';
 import Ponentes from './pages/Ponentes';
 import PonenteDetail from './pages/PonenteDetail';
+import Eventos from './pages/Eventos';
 import NotFoundPage from './pages/NotFoundPage';
+import EventoDetail from './pages/EventoDetail.jsx';
 
 
 // Importación de la página de Auth
@@ -44,6 +46,8 @@ function App() {
               <Route path="/paquetes" element={<Paquetes />} />
               <Route path="/ponentes" element={<Ponentes />} />
               <Route path="/ponentes/:id" element={<PonenteDetail />} />
+              <Route path="/eventos" element={<Eventos />} />
+              <Route path="/eventos/:id" element={<EventoDetail />} />
               <Route path="*" element={<NotFoundPage />} />
               
             </Route>

@@ -85,6 +85,17 @@ switch(true) {
     case $ruta === '/admin/eventos/crear' && $_SERVER['REQUEST_METHOD'] === 'POST':
         require_once __DIR__ . '/../controllers/EventosController.php';
         \Controllers\EventosController::crear();
+        break; 
+        
+    case $ruta === '/api/eventos-ponente' && $_SERVER['REQUEST_METHOD'] === 'GET':
+        require_once __DIR__ . '/../controllers/APIEventos.php';
+        \Controllers\APIEventos::porPonente();
+        break;
+        
+    case strpos($ruta, '/api/eventos/') === 0 && $_SERVER['REQUEST_METHOD'] === 'GET':
+        $id = substr($ruta, strlen('/api/eventos/'));
+        require_once __DIR__ . '/../controllers/APIEventos.php';
+        \Controllers\APIEventos::evento($id);
         break;    
 
     // API DE PONENTES
