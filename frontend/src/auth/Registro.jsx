@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link} from 'react-router-dom';
 import { clienteAxios } from '../config/axios';
 import Campo from '../components/formulario/Campo';
 import Submit from '../components/formulario/Submit';
@@ -12,6 +12,8 @@ export default function Registro() {
   const [password, setPassword] = useState('');
   const [repetirPassword, setRepetirPassword] = useState('');
   const [alerta, setAlerta] = useState({});
+
+
 
   const handleSubmit = async e => {
     e.preventDefault();

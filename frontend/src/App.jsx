@@ -20,6 +20,7 @@ import OlvidePassword from './auth/OlvidePassword';
 import Confirmar from './auth/Confirmar';
 import Reestablecer from './auth/Reestablecer';
 
+
 // Páginas de administrador
 import AdminLayout from './layouts/AdminLayout';
 import AdminDashboard from './pages/admin/AdminDashboard';
@@ -60,7 +61,7 @@ function App() {
               <Route path="registro" element={<Registro />} />
               <Route path="olvide-password" element={<OlvidePassword />} />
               <Route path="confirmar/:token" element={<Confirmar />} />
-              <Route path="reestablecer-password/:token" element={<Reestablecer />} />
+              <Route path="reestablecer/:token" element={<Reestablecer />} />
           </Route>
 
           {/* Área de administración */}

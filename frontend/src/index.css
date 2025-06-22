@@ -678,3 +678,110 @@ main {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
+
+/* Nueva sección para mapa y clima */
+.mapa-clima-seccion {
+  padding: 3rem 0;
+  margin: 0 auto;
+  width: 100%; /* Cambiado: era 80% en mi sugerencia anterior */
+  max-width: 140rem; /* Cambiado: era 120rem */
+}
+
+.mapa-clima-contenedor {
+  display: grid;
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+@media (min-width: 768px) {
+  .mapa-clima-contenedor {
+    grid-template-columns: 4fr 1fr; /* Cambiado: era 2fr 1fr */
+  }
+}
+
+
+.mapa {
+  height: 40rem;
+  width: 100%;
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.clima {
+  background-color: var(--blanco);
+  padding: 2rem;
+  border-radius: 1rem;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+}
+
+.clima__titulo {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 2rem;
+  color: var(--primary);
+}
+
+.clima__info {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex: 1;
+}
+
+.clima__principal {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.clima__icono {
+  font-size: 4rem;
+  color: var(--primary);
+  margin-right: 1rem;
+}
+
+.clima__temperatura {
+  font-size: 4rem;
+  font-weight: 700;
+}
+
+.clima__detalles {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 2rem;
+}
+
+.clima__detalle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.clima__detalle-icono {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  color: var(--gris);
+}
+
+.clima__detalle-icono--sol {
+  color: #f9d71c;
+}
+
+.clima__detalle-icono--nube {
+  color: #7a93ac;
+}
+
+.clima__fuente {
+  text-align: center;
+  margin-top: auto;
+  color: var(--gris);
+}
+
+.clima__cargando {
+  text-align: center;
+  color: var(--gris);
+}

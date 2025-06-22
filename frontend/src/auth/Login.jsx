@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { clienteAxios } from '../config/axios';
 import Campo from '../components/formulario/Campo';
 import Submit from '../components/formulario/Submit';
@@ -10,7 +10,19 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [alerta, setAlerta] = useState({});
-  
+
+  const location = useLocation();
+  useEffect(() => {
+  if (location.state?.mensaje) {
+    setAlerta({
+      msg: location.state.mensaje,
+      tipo: 'error'
+    });
+    // Opcional: limpiar el state para que no persista al recargar
+    window.history.replaceState({}, document.title);
+  }
+}, [location]);
+
   const navigate = useNavigate();
   const { setAuth } = useAuth();
 
@@ -53,7 +65,7 @@ export default function Login() {
       if (isAdmin) {
         navigate('/admin/dashboard');
       } else {
-        navigate('/eventos');
+        navigate('/');
       }
 
     } catch (error) {

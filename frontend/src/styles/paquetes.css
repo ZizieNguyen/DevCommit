@@ -79,6 +79,7 @@
   font-size: 1.5rem;
 }
 
+
 /* Colores de check según el tipo de boleto */
 .boleto--presencial .paquete__elemento::before {
   color: #9ae3aa;
@@ -92,7 +93,35 @@
   color: #333;
 }
 
+.boleto.boleto--gratis .paquete__elemento.paquete__elemento--no::before {
+  content: "×";  
+  color: var(--rojo) !important; 
+  font-size: 1.8rem;
+  font-weight: 900; 
+}
+
 /* Ajustes para el precio dentro del boleto */
 .boleto .boleto__precio {
   margin: 2rem 0;
+}
+
+
+.acciones-post-registro {
+  margin-top: 1.5rem;
+  text-align: center;
+}
+
+.acciones-post-registro__boton {
+  display: inline-block;
+  background-color: #1a1b15;
+  color: #ffffff;
+  font-weight: 700;
+  padding: 1rem 2rem;
+  border-radius: 0.5rem;
+  text-decoration: none;
+  transition: background-color 0.3s ease;
+}
+
+.acciones-post-registro__boton:hover {
+  background-color: #3f3f3f;
 }

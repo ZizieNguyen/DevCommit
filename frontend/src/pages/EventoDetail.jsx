@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { clienteAxios } from '../config/axios';
 import Spinner from '../components/Spinner';
 import Alerta from '../components/alertas/Alerta';
+import useAuth from '../hooks/useAuth';
 import '../styles/evento-detail.css';
 
 // Función para formatear fecha
@@ -21,10 +22,13 @@ const formatearFecha = fecha => {
 
 export default function EventoDetail() {
   const { id } = useParams();
+  const { auth } = useAuth();
+  const navigate = useNavigate();
   
   const [evento, setEvento] = useState(null);
   const [cargando, setCargando] = useState(true);
   const [alerta, setAlerta] = useState({});
+  const [reservando, setReservando] = useState(false);
   
   useEffect(() => {
     const obtenerEvento = async () => {
@@ -52,6 +56,59 @@ export default function EventoDetail() {
     
     obtenerEvento();
   }, [id]);
+
+  const handleReservar = async () => {
+    if (!auth?.id) {
+      navigate('/login', { 
+        state: { 
+          mensaje: 'Necesitas iniciar sesión para reservar',
+          redirigirA: `/eventos/${id}`
+        } 
+      });
+      return;
+    }
+    
+    setReservando(true);
+    
+    try {
+      const { data } = await clienteAxios.post('/api/eventos/reservar', {
+        evento_id: id
+      });
+      
+      if (data.error) {
+        setAlerta({
+          tipo: 'error',
+          mensaje: data.msg
+        });
+        setReservando(false);
+        return;
+      }
+      
+      setAlerta({
+        tipo: 'exito',
+        mensaje: 'Evento reservado correctamente'
+      });
+      
+      // Actualizar el evento para reflejar un lugar menos
+      setEvento({
+        ...evento,
+        disponibles: evento.disponibles - 1
+      });
+      
+      // Después de 3 segundos, redirigir a la página de eventos
+      setTimeout(() => {
+        navigate('/eventos');
+      }, 3000);
+      
+    } catch (error) {
+      setAlerta({
+        tipo: 'error',
+        mensaje: error.response?.data?.msg || 'Error al reservar el evento'
+      });
+    } finally {
+      setReservando(false);
+    }
+  };
   
   if (cargando) return <Spinner />;
   
@@ -158,16 +215,20 @@ export default function EventoDetail() {
       </div>
       
       <div className="evento-detalle__acciones">
-        <Link to="/eventos" className="evento-detalle__volver">
-          &larr; Volver a Eventos
-        </Link>
-        
-        {evento.disponibles > 0 && (
-          <button className="evento-detalle__registrar">
-            Reservar mi lugar
-          </button>
-        )}
-      </div>
+      <Link to="/eventos" className="evento-detalle__volver">
+        &larr; Volver a Eventos
+      </Link>
+      
+      {evento.disponibles > 0 && (
+        <button 
+          className="evento-detalle__registrar"
+          onClick={handleReservar}
+          disabled={reservando}
+        >
+          {reservando ? 'Procesando...' : 'Reservar mi lugar'}
+        </button>
+      )}
+    </div>
     </main>
   );
 }

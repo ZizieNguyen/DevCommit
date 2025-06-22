@@ -43,7 +43,7 @@ export default function AdminSidebar() {
           </span>
         </NavLink>
         
-        <NavLink 
+        {/* <NavLink 
           to="/admin/registrados" 
           className={({isActive}) => isActive ? "dashboard__enlace dashboard__enlace--actual" : "dashboard__enlace"}
         >
@@ -61,7 +61,7 @@ export default function AdminSidebar() {
           <span className="dashboard__menu-texto">
             Regalos
           </span>
-        </NavLink>
+        </NavLink> */}
         
       </nav>
     </aside>

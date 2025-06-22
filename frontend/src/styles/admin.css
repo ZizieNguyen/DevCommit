@@ -319,14 +319,14 @@
 .bloques__grid {
   display: grid;
   margin-top: 1rem;
-  gap: 3rem;
+  gap: 2.5rem;
   grid-template-columns: 1fr;
 }
 
 
 
 .bloque {
-  padding: 2rem;
+  padding: 1rem;
   border-radius: 1rem;
   color: var(--blanco);
 }
@@ -361,7 +361,7 @@
 }
 
 .bloque__texto--cantidad {
-  margin-top: 5rem;
+  margin-top: 3rem;
   font-weight: 900;
   font-size: 4rem;
   text-align: center;

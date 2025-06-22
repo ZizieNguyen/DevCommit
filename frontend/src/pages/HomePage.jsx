@@ -1,15 +1,19 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { FaCalendarAlt, FaCode, FaUsers, FaMicrophone } from 'react-icons/fa';
+import { FaCalendarAlt, FaCode, FaUsers, FaMicrophone, FaTemperatureHigh, FaWind, FaSun, FaCloud } from 'react-icons/fa';
 import { clienteAxios } from '../config/axios';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay } from 'swiper/modules';
 import EventoCard from '../components/EventoCard';
+// Importaciones para el mapa
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import L from 'leaflet';
 
-// Importar estilos de Swiper
+// Importar estilos de Swiper y Leaflet
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
+import 'leaflet/dist/leaflet.css';
 import '../styles/inicio.css';
 
 // Componente de Spinner simple
@@ -21,7 +25,13 @@ const Spinner = () => (
   </div>
 );
 
-
+// Fix para los iconos de Leaflet en React
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
+  iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+  shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png'
+});
 
 // Componente PonenteCard simple
 const PonenteCard = ({ ponente }) => {
@@ -87,6 +97,26 @@ export default function HomePage() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [clima, setClima] = useState(null);
+
+  // API PÚBLICA 1: Open-Meteo para el clima
+  useEffect(() => {
+    // Coordenadas de Madrid
+    const lat = 40.4168;
+    const lon = -3.7038;
+    fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weathercode,windspeed_10m&timezone=auto`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.current) {
+          setClima({
+            temperature: data.current.temperature_2m,
+            weathercode: data.current.weathercode,
+            windspeed: data.current.windspeed_10m
+          });
+        }
+      })
+      .catch(() => setClima(null));
+  }, []);
 
   useEffect(() => {
     const cargarDatos = async () => {
@@ -124,12 +154,10 @@ export default function HomePage() {
         try {
           const { data: ponentesData } = await clienteAxios.get('/api/ponentes?limite=8');
           
-          // CORREGIDO: Verificar si la respuesta tiene un objeto con la propiedad 'ponentes'
           if (ponentesData && ponentesData.ponentes && Array.isArray(ponentesData.ponentes)) {
             console.log('Ponentes cargados correctamente:', ponentesData.ponentes.length);
             setPonentes(ponentesData.ponentes);
           } else if (Array.isArray(ponentesData)) {
-            // Formato alternativo, por si la API cambia
             setPonentes(ponentesData);
           } else {
             console.warn('Formato de respuesta de ponentes inesperado:', ponentesData);
@@ -152,7 +180,6 @@ export default function HomePage() {
               asistentes: statsData.total_registros || 500
             });
           } else {
-            // Usar valores predeterminados
             setStats({
               eventos: 30,
               categorias: 15,
@@ -276,66 +303,65 @@ export default function HomePage() {
 
       {/* Eventos destacados */}
       <section id="eventos" className="eventos">
-  <div className="contenedor">
-    <h2 className="titulo">Próximos <span>Eventos</span></h2>
-    <p className="eventos__descripcion">
-      Descubre los workshops y conferencias impartidos por expertos que están transformando la industria
-    </p>
+        <div className="contenedor">
+          <h2 className="titulo">Próximos <span>Eventos</span></h2>
+          <p className="eventos__descripcion">
+            Descubre los workshops y conferencias impartidos por expertos que están transformando la industria
+          </p>
 
-    {error && (
-      <div className="alerta alerta--error">
-        {error}
-      </div>
-    )}
+          {error && (
+            <div className="alerta alerta--error">
+              {error}
+            </div>
+          )}
 
-    {loading ? (
-      <div className="eventos__spinner">
-        <Spinner />
-      </div>
-    ) : eventos.length > 0 ? (
-      <div className="eventos__swiper">
-        <Swiper
-          modules={[Navigation, Pagination, Autoplay]}
-          spaceBetween={30}
-          slidesPerView={1}
-          navigation
-          pagination={{ clickable: true }}
-          autoplay={{ delay: 3000, disableOnInteraction: false }}
-          breakpoints={{
-            640: {
-              slidesPerView: 1,
-            },
-            768: {
-              slidesPerView: 2,
-            },
-            1024: {
-              slidesPerView: 3,
-            }
-          }}
-        >
-          {eventos.map(evento => (
-            <SwiperSlide key={`evento-${evento.id}`}>
-              {/* Envuelve el EventoCard en un div con clase personalizada */}
-              <div className="evento-homepage">
-                <EventoCard evento={evento} compact={true} />
-              </div>
-            </SwiperSlide>
-          ))}
-        </Swiper>
-      </div>
-    ) : (
-      <p className="eventos__no-eventos">
-        No hay eventos próximos disponibles en este momento.
-      </p>
-    )}
+          {loading ? (
+            <div className="eventos__spinner">
+              <Spinner />
+            </div>
+          ) : eventos.length > 0 ? (
+            <div className="eventos__swiper">
+              <Swiper
+                modules={[Navigation, Pagination, Autoplay]}
+                spaceBetween={30}
+                slidesPerView={1}
+                navigation
+                pagination={{ clickable: true }}
+                autoplay={{ delay: 3000, disableOnInteraction: false }}
+                breakpoints={{
+                  640: {
+                    slidesPerView: 1,
+                  },
+                  768: {
+                    slidesPerView: 2,
+                  },
+                  1024: {
+                    slidesPerView: 3,
+                  }
+                }}
+              >
+                {eventos.map(evento => (
+                  <SwiperSlide key={`evento-${evento.id}`}>
+                    <div className="evento-homepage">
+                      <EventoCard evento={evento} compact={true} />
+                    </div>
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+            </div>
+          ) : (
+            <p className="eventos__no-eventos">
+              No hay eventos próximos disponibles en este momento.
+            </p>
+          )}
 
-    <div className="eventos__enlace">
-      <Link to="/eventos" className="boton">
-        Ver Todos los Eventos
-      </Link>
-    </div>
-  </div>
-</section>
+          <div className="eventos__enlace">
+            <Link to="/eventos" className="boton">
+              Ver Todos los Eventos
+            </Link>
+          </div>
+        </div>
+      </section>
 
       {/* Ponentes destacados */}
       <section className="ponentes">
@@ -438,22 +464,75 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Mapa del evento */}
-      <section className="mapa">
-        <h2 className="mapa__titulo">
-          Ubicación del <span>Evento</span>
-        </h2>
-        
-        <iframe 
-          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d12159.055672171031!2d-3.7027189887493075!3d40.41679334470141!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xd42287d6da3df9f%3A0x5a3c45114b3a75f7!2sPuerta%20del%20Sol%2C%20Madrid!5e0!3m2!1ses!2ses!4v1654547597540!5m2!1ses!2ses" 
-          width="100%" 
-          height="100%" 
-          style={{ border: 0 }} 
-          allowFullScreen 
-          loading="lazy" 
-          title="Ubicación del evento"
-          referrerPolicy="no-referrer-when-downgrade">
-        </iframe>
+      {/* AQUÍ ESTÁN LAS DOS APIs PÚBLICAS: OpenStreetMap para el mapa y OpenMeteo para el clima */}
+      <section className="mapa-clima-seccion">
+        <div className="contenedor">
+          <h2 className="titulo">
+            Ubicación y Clima del <span>Evento</span>
+          </h2>
+          
+          <div className="mapa-clima-contenedor">
+            {/* API PÚBLICA 2: OpenStreetMap con Leaflet */}
+            <div className="mapa">
+              <MapContainer 
+                center={[40.4168, -3.7038]} 
+                zoom={15} 
+                style={{ height: '100%', width: '100%', borderRadius: '1rem' }}
+              >
+                <TileLayer
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                />
+                <Marker position={[40.4168, -3.7038]}>
+                  <Popup>
+                    <b>DevCommit 2025</b><br/>
+                    Puerta del Sol, Madrid<br/>
+                    5-6 de Octubre, 2025
+                  </Popup>
+                </Marker>
+              </MapContainer>
+            </div>
+            
+            {/* Datos del clima de la API de OpenMeteo */}
+            <div className="clima">
+              <h3 className="clima__titulo">Clima actual en Madrid</h3>
+              
+              {clima ? (
+                <div className="clima__info">
+                  <div className="clima__principal">
+                    <FaTemperatureHigh className="clima__icono" />
+                    <span className="clima__temperatura">{clima.temperature}°C</span>
+                  </div>
+                  
+                  <div className="clima__detalles">
+                    <div className="clima__detalle">
+                      <FaWind className="clima__detalle-icono" />
+                      <span>{clima.windspeed} km/h</span>
+                    </div>
+                    
+                    {clima.weathercode <= 2 ? (
+                      <div className="clima__detalle">
+                        <FaSun className="clima__detalle-icono clima__detalle-icono--sol" />
+                        <span>Soleado</span>
+                      </div>
+                    ) : (
+                      <div className="clima__detalle">
+                        <FaCloud className="clima__detalle-icono clima__detalle-icono--nube" />
+                        <span>Nublado</span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="clima__fuente">
+                    <small>Datos proporcionados por <a href="https://open-meteo.com/" target="_blank" rel="noopener noreferrer">Open-Meteo API</a></small>
+                  </div>
+                </div>
+              ) : (
+                <p className="clima__cargando">Cargando información del clima...</p>
+              )}
+            </div>
+          </div>
+        </div>
       </section>
     </>
   );

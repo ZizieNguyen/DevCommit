@@ -1,7 +1,12 @@
 import axios from 'axios';
 
 export const clienteAxios = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000'
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-Requested-With': 'XMLHttpRequest'
+  },
+  withCredentials: true
 });
 
 clienteAxios.interceptors.request.use(

@@ -12,7 +12,7 @@ export default function AdminLayout() {
   // Redireccionar si el usuario no está autenticado o no es admin
  if(!auth || typeof auth !== 'object' || (auth.admin !== 1 && auth.admin !== true && auth.admin !== "1")) {
   console.log("Redirigiendo porque:", { auth });
-  return <Navigate to="/" />;
+  return <Navigate to="/login" state={{ mensaje: "Necesitas loguearte como administrador para acceder" }} />;
 }
   
   return (

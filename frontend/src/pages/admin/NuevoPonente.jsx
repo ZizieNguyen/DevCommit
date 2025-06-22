@@ -36,27 +36,33 @@ export default function NuevoPonente() {
     
     try {
       const { data } = await clienteAxios.post('/api/ponentes', formData, { 
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
-        }
-      });
-      
-      if (data?.error === false && data?.id) {
-  // Solo mostrar éxito si explícitamente error=false Y se recibe un ID
-        setAlerta({
-          msg: data.msg || 'Ponente registrado correctamente',
-          tipo: 'exito'
-        });
-        // Opcional: Limpiar el formulario
-        e.target.reset();
-      } else {
-        // Cualquier otra respuesta es un error
-        setAlerta({
-          msg: data?.msg || 'Error al registrar el ponente',
-          tipo: 'error'
-        });
-      }
+    headers: {
+      'Content-Type': 'multipart/form-data',
+      'Authorization': `Bearer ${localStorage.getItem('token')}`
+    }
+  });
+  
+  // Muestra toda la respuesta para depuración
+  console.log('Respuesta del servidor:', data);
+  
+  if (data?.id) {
+    setAlerta({
+      msg: 'Ponente registrado correctamente',
+      tipo: 'exito'
+    });
+    e.target.reset();
+  } else {
+    setAlerta({
+      msg: 'Error al registrar el ponente',
+      tipo: 'error'
+    });
+  
+    
+    // Mostrar alertas detalladas en consola
+    if (data?.alertas) {
+      console.log('Alertas detalladas:', data.alertas);
+    }
+  }
 
       console.log('Alerta:', alerta);
 

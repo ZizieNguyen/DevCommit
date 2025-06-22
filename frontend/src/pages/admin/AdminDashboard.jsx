@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
 import { clienteAxios } from '../../config/axios';
+import { FaUserTag, FaUsers, FaUserTie, FaMoneyBillWave } from 'react-icons/fa';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
-    eventos: 0,
-    ponentes: 0,
-    registros: 0,
+    registros_gratuitos: 0,
+    registros_virtuales: 0,
+    registros_presenciales: 0,
     ingresos: 0,
-    eventos_menos_disponibles: [],
-    eventos_mas_disponibles: [],
-    registros_recientes: []
+    precio_virtual: 49,
+    precio_presencial: 99
   });
 
   const [cargando, setCargando] = useState(true);
@@ -29,7 +29,23 @@ export default function AdminDashboard() {
           return;
         }
         
-        setStats(data);
+        // Obtener conteos específicos por tipo de paquete
+        // El backend debería enviar estos valores, si no lo hace, los calculamos aquí
+        const gratuitos = data.registros_gratuitos || data.registros_por_tipo?.gratuitos || 0;
+        const virtuales = data.registros_virtuales || data.registros_por_tipo?.virtuales || 0;
+        const presenciales = data.registros_presenciales || data.registros_por_tipo?.presenciales || 0;
+        
+        // Usar ingresos del backend o calcularlos
+        const ingresos = data.ingresos || 0;
+        
+        setStats({
+          registros_gratuitos: gratuitos,
+          registros_virtuales: virtuales,
+          registros_presenciales: presenciales,
+          ingresos: ingresos,
+          precio_virtual: 49,
+          precio_presencial: 99
+        });
       } catch (error) {
         console.error('Error al cargar datos del dashboard:', error);
         setError('No se pudo conectar con el servidor');
@@ -51,56 +67,38 @@ export default function AdminDashboard() {
       <main className="bloques">
         <div className="bloques__grid">
           <div className="bloque">
-            <h3 className="bloque__heading">Últimos Registros</h3>
-            
-            {stats.registros_recientes?.length ? (
-              stats.registros_recientes.map(registro => (
-                <div className="bloque__contenido" key={registro.id}>
-                  <p className="bloque__texto">
-                    {registro.usuario.nombre} {registro.usuario.apellido}
-                  </p>
-                </div>
-              ))
-            ) : (
-              <p className="bloque__texto">No hay registros recientes</p>
-            )}
+            <h3 className="bloque__heading">
+              <FaUserTag className="mr-2" /> Registros Gratuitos
+            </h3>
+            <p className="bloque__texto--cantidad">{stats.registros_gratuitos}</p>
+            <p className="bloque__texto text-center">Pase: €0</p>
           </div>
           
           <div className="bloque">
-            <h3 className="bloque__heading">Ingresos</h3>
-            <p className="bloque__texto--cantidad">€ {stats.ingresos}</p>
+            <h3 className="bloque__heading">
+              <FaUsers className="mr-2" /> Registros Virtuales
+            </h3>
+            <p className="bloque__texto--cantidad">{stats.registros_virtuales}</p>
+            <p className="bloque__texto text-center">Pase: €{stats.precio_virtual}</p>
           </div>
           
           <div className="bloque">
-            <h3 className="bloque__heading">Eventos Con Menos Lugares Disponibles</h3>
-            
-            {stats.eventos_menos_disponibles?.length ? (
-              stats.eventos_menos_disponibles.map(evento => (
-                <div className="bloque__contenido" key={evento.id}>
-                  <p className="bloque__texto">
-                    {evento.nombre} - {evento.disponibles} Disponibles
-                  </p>
-                </div>
-              ))
-            ) : (
-              <p className="bloque__texto">No hay eventos con pocos lugares</p>
-            )}
+            <h3 className="bloque__heading">
+              <FaUserTie className="mr-2" /> Registros Presenciales
+            </h3>
+            <p className="bloque__texto--cantidad">{stats.registros_presenciales}</p>
+            <p className="bloque__texto text-center">Pase: €{stats.precio_presencial}</p>
           </div>
           
           <div className="bloque">
-            <h3 className="bloque__heading">Eventos Con Más Lugares Disponibles</h3>
-            
-            {stats.eventos_mas_disponibles?.length ? (
-              stats.eventos_mas_disponibles.map(evento => (
-                <div className="bloque__contenido" key={evento.id}>
-                  <p className="bloque__texto">
-                    {evento.nombre} - {evento.disponibles} Disponibles
-                  </p>
-                </div>
-              ))
-            ) : (
-              <p className="bloque__texto">No hay eventos con muchos lugares</p>
-            )}
+            <h3 className="bloque__heading">
+              <FaMoneyBillWave className="mr-2" /> Ingresos Totales
+            </h3>
+            <p className="bloque__texto--cantidad">€{stats.ingresos}</p>
+            <p className="bloque__texto text-center">
+              (€{stats.precio_virtual} × {stats.registros_virtuales} + 
+              €{stats.precio_presencial} × {stats.registros_presenciales})
+            </p>
           </div>
         </div>
       </main>
