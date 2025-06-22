@@ -9,19 +9,24 @@ use Model\Ponente;
 class APIPonentes {
 
     public static function inicializar() {
-        // Verificar que existe la imagen por defecto
-        $carpeta_imagenes = __DIR__ . '/../../public/img/speakers';
-        $imagen_default = $carpeta_imagenes . '/default_speaker.jpg';
-        
-        // Si no existe la imagen default, copiar alguna otra imagen como respaldo
-        if (!file_exists($imagen_default) && is_dir($carpeta_imagenes)) {
-            // Buscar cualquier jpg en la carpeta
-            $jpgs = glob($carpeta_imagenes . '/*.jpg');
-            if (count($jpgs) > 0) {
-                copy($jpgs[0], $imagen_default);
-            }
+    // Verificar que existe la imagen por defecto - NUEVA UBICACIÓN
+    $carpeta_imagenes = __DIR__ . '/../../frontend/public/speakers';
+    $imagen_default = $carpeta_imagenes . '/default_speaker.png';
+    
+    // Crear la carpeta si no existe
+    if(!is_dir($carpeta_imagenes)) {
+        mkdir($carpeta_imagenes, 0755, true);
+    }
+    
+    // Si no existe la imagen default, crear una básica
+    if (!file_exists($imagen_default)) {
+        // Intentar copiar desde la ubicación antigua si existe
+        $antigua_default = __DIR__ . '/../public/img/speakers/default_speaker.png';
+        if(file_exists($antigua_default)) {
+            copy($antigua_default, $imagen_default);
         }
     }
+}
 
     public static function index() {
         self::inicializar();
@@ -114,7 +119,7 @@ public static function eliminar($id) {
         
         // Si hay archivo de imagen
         if(!empty($_FILES['imagen']['tmp_name'])) {
-            $carpeta_imagenes = '../public/img/speakers';
+            $carpeta_imagenes = __DIR__ . '/../../frontend/public/speakers';
             
             // Crear la carpeta si no existe
             if(!is_dir($carpeta_imagenes)) {
@@ -228,7 +233,7 @@ public static function eliminar($id) {
     }
     
     // Procesar imagen
-    $carpeta_imagenes = '../public/img/speakers';
+    $carpeta_imagenes = __DIR__ . '/../../frontend/public/speakers';
     
     // Mantener imagen actual si no se sube una nueva
     $imagen_actual = $ponente->imagen;

@@ -8,20 +8,28 @@ use Model\Registro;
 class APIRegalos {
 
     public static function index() {
-
-        if(!is_admin()) {
-            echo json_encode([]);
-            return;
-        }
-
-        $regalos = Regalo::all();
-
-        foreach($regalos as $regalo) {
-            $regalo->total = Registro::totalArray(['regalo_id' => $regalo->id, 'paquete_id' => "1"]);
-        }
-
-        echo json_encode($regalos);
-        return;
+        // Suprimir advertencias para que no contaminen la salida JSON
+        error_reporting(0);
         
+        header('Content-Type: application/json');
+        
+        try {
+            // Limpiar cualquier salida previa
+            if (ob_get_length()) ob_clean();
+            
+            // Obtener directamente los regalos
+            $regalos = Regalo::all('ASC');
+            
+            if (!$regalos) {
+                $regalos = [];
+            }
+            
+            // Devolver el array de regalos
+            echo json_encode($regalos);
+            
+        } catch (\Exception $e) {
+            error_log('Error al obtener regalos: ' . $e->getMessage());
+            echo json_encode([]);
+        }
     }
 }

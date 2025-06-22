@@ -54,12 +54,12 @@ class Ponente extends ActiveRecord {
     public function getRutaImagen() {
     // Si no hay imagen definida, retornar directamente la default
     if(!$this->imagen || $this->imagen === '') {
-        return '/img/speakers/default_speaker.png';
+        return '/speakers/default_speaker.png';
     }
     
-    // Caso especial para default_speaker (siempre usar .png)
+    // Caso especial para default_speaker
     if($this->imagen === 'default_speaker') {
-        return '/img/speakers/default_speaker.png';
+        return '/speakers/default_speaker.png';
     }
     
     // Verificar si el nombre ya incluye extensión
@@ -67,21 +67,10 @@ class Ponente extends ActiveRecord {
     
     if($extension) {
         // Ya tiene extensión, usar el nombre completo
-        return '/img/speakers/' . $this->imagen;
+        return '/speakers/' . $this->imagen;
     } else {
-        // No tiene extensión, intentar con varias extensiones
-        $directorio_base = __DIR__ . '/../../public';
-        
-        $extensiones = ['.jpg', '.png', '.webp'];
-        foreach($extensiones as $ext) {
-            $ruta_con_ext = '/img/speakers/' . $this->imagen . $ext;
-            if(file_exists($directorio_base . $ruta_con_ext)) {
-                return $ruta_con_ext;
-            }
-        }
-        
-        // Si ninguna extensión funciona, devolver con .jpg (la más común)
-        return '/img/speakers/' . $this->imagen . '.jpg';
+        // Intentar con varias extensiones - apuntando a la nueva ubicación
+        return '/speakers/' . $this->imagen;
     }
 }
 

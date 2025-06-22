@@ -12,377 +12,475 @@ use Model\Registro;
 use Model\Categoria;
 use Model\EventosRegistros;
 use Model\Regalo;
+use Classes\Email;
 
 class RegistroController {
 
-    public static function crear() {
-        // Validar autenticación
-        if(!isset($_SESSION['id'])) {
-            echo json_encode([
-                'error' => true,
-                'msg' => 'Acceso denegado'
-            ]);
-            return;
-        }
-
-        // Verificar si el usuario ya está registrado
-        $registro = Registro::where('usuario_id', $_SESSION['id']);
-
-        if(isset($registro)) {
-            // Indicar que ya existe un registro
-            echo json_encode([
-                'error' => false,
-                'registrado' => true,
-                'paquete_id' => $registro->paquete_id,
-                'token' => $registro->token
-            ]);
-            return;
-        }
-
-        // Obtener los paquetes disponibles
-        $paquetes = Paquete::all('ASC');
-        
+    public static function simularPago() {
+    // Registrar los datos recibidos para diagnóstico
+    error_log("==================== INICIO SIMULACIÓN PAGO ====================");
+    error_log("METHOD: " . $_SERVER['REQUEST_METHOD']);
+    error_log("CONTENT_TYPE: " . $_SERVER['CONTENT_TYPE'] ?? 'No especificado');
+    
+    // Obtener y registrar los datos crudos
+    $rawData = file_get_contents('php://input');
+    error_log("RAW DATA: " . $rawData);
+    
+    // Intentar procesar JSON
+    $datos = json_decode($rawData, true);
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        error_log("ERROR JSON: " . json_last_error_msg());
         echo json_encode([
-            'error' => false,
-            'registrado' => false,
-            'paquetes' => $paquetes
+            'error' => true,
+            'msg' => 'Formato de datos inválido'
         ]);
+        return;
     }
-
-    public static function gratis() {
-        if($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    
+    error_log("DATOS PARSEADOS: " . print_r($datos, true));
+    
+    // Verificar el ID del usuario
+    $usuario_id = $datos['usuario_id'] ?? null;
+    
+    if (!$usuario_id) {
+        echo json_encode([
+            'error' => true,
+            'msg' => 'ID de usuario no proporcionado en la petición'
+        ]);
+        return;
+    }
+    
+    try {
+        // Conexión directa a la base de datos sin ORM (como en gratis())
+        $conn = new \mysqli($_ENV['DB_HOST'], $_ENV['DB_USER'], $_ENV['DB_PASS'], $_ENV['DB_NAME']);
+        
+        if ($conn->connect_error) {
+            throw new \Exception("Error de conexión: " . $conn->connect_error);
+        }
+        
+        // Verificar si el usuario ya está registrado
+        $usuario_id_escaped = $conn->real_escape_string((string)$usuario_id);
+        $consulta = "SELECT * FROM registros WHERE usuario_id = '{$usuario_id_escaped}' LIMIT 1";
+        
+        $resultado = $conn->query($consulta);
+        if (!$resultado) {
+            throw new \Exception("Error en consulta: " . $conn->error);
+        }
+        
+        if ($resultado->num_rows > 0) {
             echo json_encode([
                 'error' => true,
-                'msg' => 'Método no válido'
+                'msg' => 'Ya tienes un paquete registrado. Un usuario solo puede tener un tipo de boleto.'
             ]);
             return;
         }
         
-        // Validar autenticación
-        if(!isset($_SESSION['id'])) {
+        // Verificar que el usuario existe
+        $consulta_usuario = "SELECT * FROM usuarios WHERE id = '{$usuario_id_escaped}' LIMIT 1";
+        
+        $resultado_usuario = $conn->query($consulta_usuario);
+        if (!$resultado_usuario) {
+            throw new \Exception("Error en consulta usuario: " . $conn->error);
+        }
+        
+        if ($resultado_usuario->num_rows === 0) {
             echo json_encode([
                 'error' => true,
-                'msg' => 'Acceso denegado'
+                'msg' => 'Usuario no encontrado. Verifica tu sesión.'
             ]);
             return;
         }
-
-        // Verificar si el usuario ya está registrado
-        $registro = Registro::where('usuario_id', $_SESSION['id']);
-        if(isset($registro) && $registro->paquete_id === "3") {
+        
+        // Usuario encontrado, crear registro
+        $usuario = $resultado_usuario->fetch_assoc();
+        
+        // Validar el paquete_id
+        if (!isset($datos['paquete_id']) || ($datos['paquete_id'] != 1 && $datos['paquete_id'] != 2)) {
             echo json_encode([
-                'error' => false,
-                'registrado' => true,
-                'token' => $registro->token
+                'error' => true,
+                'msg' => 'Tipo de paquete inválido'
             ]);
             return;
         }
-
+        
+        // Validar regalo para paquete presencial
+        if ($datos['paquete_id'] == 1 && !isset($datos['regalo_id'])) {
+            echo json_encode([
+                'error' => true,
+                'msg' => 'Debes seleccionar un regalo para el paquete presencial'
+            ]);
+            return;
+        }
+        
+        // Token único
         $token = substr(md5(uniqid(rand(), true)), 0, 8);
         
-        // Crear registro
-        $datos = [
-            'paquete_id' => 3,
-            'pago_id' => '',
-            'token' => $token,
-            'usuario_id' => $_SESSION['id']
-        ];
-
-        $registro = new Registro($datos);
-        $resultado = $registro->guardar();
-
-        if($resultado) {
+        // Iniciar transacción para garantizar consistencia
+        $conn->begin_transaction();
+        
+        try {
+            // Insertar registro usando consulta preparada
+            $stmt = $conn->prepare("INSERT INTO registros (paquete_id, pago_id, token, usuario_id, regalo_id) VALUES (?, ?, ?, ?, ?)");
+            $paquete_id = (int)$datos['paquete_id'];
+            $pago_id = $datos['pago_id'] ?? 'sim_' . time();
+            $regalo_id = $datos['regalo_id'] ?? null;
+            
+            if (!$stmt) {
+                throw new \Exception("Error preparando consulta: " . $conn->error);
+            }
+            
+            $stmt->bind_param("isssi", $paquete_id, $pago_id, $token, $usuario_id_escaped, $regalo_id);
+            $exito = $stmt->execute();
+            
+            if (!$exito) {
+                throw new \Exception("Error insertando registro: " . $stmt->error);
+            }
+            
+            // Verificar que se insertó correctamente
+            if ($stmt->affected_rows <= 0) {
+                throw new \Exception("No se pudo insertar el registro");
+            }
+            
+            // Si todo está bien, confirmar la transacción
+            $conn->commit();
+            
+            // Determinar mensaje según tipo de paquete
+            $asunto = '';
+            $mensaje = '';
+            
+            if ($paquete_id === 1) { // Presencial
+                $asunto = 'Confirmación de Pase Presencial DevCommit';
+                
+                // Si hay regalo, obtenerlo
+                $nombre_regalo = '';
+                if ($regalo_id) {
+                    $consulta_regalo = "SELECT nombre FROM regalos WHERE id = ?";
+                    $stmt_regalo = $conn->prepare($consulta_regalo);
+                    $stmt_regalo->bind_param("i", $regalo_id);
+                    $stmt_regalo->execute();
+                    $stmt_regalo->bind_result($nombre_regalo);
+                    $stmt_regalo->fetch();
+                    $stmt_regalo->close();
+                }
+                
+                $mensaje = '<p>¡Gracias por adquirir tu pase presencial para DevCommit!</p>';
+                $mensaje .= '<p><strong>Detalles de tu compra:</strong></p>';
+                $mensaje .= '<ul>';
+                $mensaje .= '<li>Pase: Presencial ($99)</li>';
+                $mensaje .= '<li>Acceso: Completo a todas las conferencias y talleres</li>';
+                if ($nombre_regalo) {
+                    $mensaje .= '<li>Regalo seleccionado: ' . $nombre_regalo . '</li>';
+                }
+                $mensaje .= '<li>Token de registro: ' . $token . '</li>';
+                $mensaje .= '</ul>';
+                $mensaje .= '<p>Recuerda que tu pase incluye kit de bienvenida, comidas y coffee breaks durante el evento.</p>';
+                
+            } else if ($paquete_id === 2) { // Virtual
+                $asunto = 'Confirmación de Pase Virtual DevCommit';
+                $mensaje = '<p>¡Gracias por adquirir tu pase virtual para DevCommit!</p>';
+                $mensaje .= '<p><strong>Detalles de tu compra:</strong></p>';
+                $mensaje .= '<ul>';
+                $mensaje .= '<li>Pase: Virtual ($49)</li>';
+                $mensaje .= '<li>Acceso: Completo a todas las conferencias virtuales</li>';
+                $mensaje .= '<li>Talleres virtuales interactivos</li>';
+                $mensaje .= '<li>Token de registro: ' . $token . '</li>';
+                $mensaje .= '</ul>';
+                $mensaje .= '<p>Tu contenido estará disponible en la plataforma y las grabaciones por 30 días.</p>';
+            }
+            
+            // Enviar correo de confirmación
+            $email = new \Classes\Email(
+                $usuario['email'],
+                $usuario['nombre'] . ' ' . ($usuario['apellido'] ?? ''),
+                ''
+            );
+            $email->enviarConfirmacionCompra($asunto, $mensaje);
+            
+            // Respuesta exitosa
             echo json_encode([
                 'error' => false,
+                'resultado' => true,
                 'token' => $token,
                 'msg' => 'Registro exitoso'
             ]);
-        } else {
-            echo json_encode([
-                'error' => true,
-                'msg' => 'Error al registrar'
-            ]);
-        }
-    }
-
-    public static function boleto() {
-        // Obtener token desde query params
-        $token = $_GET['token'] ?? null;
-
-        if(!$token || strlen($token) !== 8) {
-            echo json_encode([
-                'error' => true,
-                'msg' => 'Token no válido'
-            ]);
-            return;
-        }
-
-        // Buscar en la BD
-        $registro = Registro::where('token', $token);
-        if(!$registro) {
-            echo json_encode([
-                'error' => true,
-                'msg' => 'No existe registro con ese token'
-            ]);
-            return;
+            
+        } catch (\Throwable $e) {
+            // Si hay error, revertir la transacción
+            $conn->rollback();
+            throw $e; // Re-lanzar para que lo maneje el catch externo
         }
         
-        // Obtener información relacionada
-        $usuario = Usuario::find($registro->usuario_id);
-        $paquete = Paquete::find($registro->paquete_id);
-        
-        // Obtener eventos registrados si es un paquete presencial
-        $eventos_registrados = [];
-        if($registro->paquete_id === "1") {
-            $eventos = EventosRegistros::whereArray(['registro_id' => $registro->id]);
-            foreach($eventos as $evento_registro) {
-                $evento = Evento::find($evento_registro->evento_id);
-                $evento->categoria = Categoria::find($evento->categoria_id);
-                $evento->dia = Dia::find($evento->dia_id);
-                $evento->hora = Hora::find($evento->hora_id);
-                $evento->ponente = Ponente::find($evento->ponente_id);
-                
-                $eventos_registrados[] = [
-                    'id' => $evento->id,
-                    'nombre' => $evento->nombre,
-                    'descripcion' => $evento->descripcion,
-                    'categoria' => [
-                        'id' => $evento->categoria->id,
-                        'nombre' => $evento->categoria->nombre
-                    ],
-                    'dia' => [
-                        'id' => $evento->dia->id,
-                        'nombre' => $evento->dia->nombre
-                    ],
-                    'hora' => [
-                        'id' => $evento->hora->id,
-                        'hora' => $evento->hora->hora
-                    ],
-                    'ponente' => [
-                        'id' => $evento->ponente->id,
-                        'nombre' => $evento->ponente->nombre . ' ' . $evento->ponente->apellido,
-                        'imagen' => $evento->ponente->imagen
-                    ]
-                ];
-            }
-        }
-
+    } catch (\Throwable $e) {
+        error_log("ERROR COMPLETO EN SIMULAR PAGO: " . $e->getMessage() . "\n" . $e->getTraceAsString());
         echo json_encode([
-            'error' => false,
-            'registro' => [
-                'token' => $registro->token,
-                'paquete' => [
-                    'id' => $paquete->id,
-                    'nombre' => $paquete->nombre
-                ],
-                'usuario' => [
-                    'nombre' => $usuario->nombre,
-                    'apellido' => $usuario->apellido,
-                    'email' => $usuario->email
-                ],
-                'eventos' => $eventos_registrados
-            ]
+            'error' => true,
+            'msg' => 'Error interno del servidor: ' . $e->getMessage()
         ]);
     }
+}
 
-    public static function pagar() {
-        if($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            echo json_encode([
-                'error' => true,
-                'msg' => 'Método no válido'
-            ]);
-            return;
-        }
-
-        // Validar autenticación
-        if(!isset($_SESSION['id'])) {
-            echo json_encode([
-                'error' => true,
-                'msg' => 'Acceso denegado'
-            ]);
-            return;
-        }
-
-        // Recibir los datos JSON
-        $json = file_get_contents("php://input");
-        $datos = json_decode($json, true);
-        
-        if(empty($datos)) {
-            echo json_encode([
-                'error' => true,
-                'msg' => 'Datos inválidos'
-            ]);
-            return;
-        }
-
-        // Crear el registro
-        $datos['token'] = substr(md5(uniqid(rand(), true)), 0, 8);
-        $datos['usuario_id'] = $_SESSION['id'];
-        
-        try {
-            $registro = new Registro($datos);
-            $resultado = $registro->guardar();
-            
-            echo json_encode([
-                'error' => false,
-                'resultado' => $resultado ? true : false,
-                'token' => $datos['token']
-            ]);
-        } catch (\Throwable $th) {
-            echo json_encode([
-                'error' => true,
-                'msg' => 'Error al procesar el pago',
-                'detalle' => $th->getMessage()
-            ]);
-        }
+    public static function gratis() {
+    // Registrar todos los encabezados y datos recibidos
+    error_log("==================== INICIO DEPURACIÓN ====================");
+    error_log("METHOD: " . $_SERVER['REQUEST_METHOD']);
+    error_log("CONTENT_TYPE: " . $_SERVER['CONTENT_TYPE'] ?? 'No especificado');
+    error_log("SESSION ID: " . session_id());
+    error_log("SESSION DATA: " . print_r($_SESSION ?? [], true));
+    
+    // Obtener y registrar los datos crudos
+    $rawData = file_get_contents('php://input');
+    error_log("RAW DATA: " . $rawData);
+    
+    // Intentar procesar JSON
+    $datos = json_decode($rawData, true);
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        error_log("ERROR JSON: " . json_last_error_msg());
+    } else {
+        error_log("DATOS PARSEADOS: " . print_r($datos, true));
+    }
+    
+    // Registro directo en archivos para garantizar visibilidad
+    $logDir = __DIR__ . '/../logs';
+    if (!is_dir($logDir)) {
+        mkdir($logDir, 0755, true);
     }
 
-    public static function conferencias() {
-        // Validar autenticación
-        if(!isset($_SESSION['id'])) {
-            echo json_encode([
-                'error' => true,
-                'msg' => 'Acceso denegado'
-            ]);
-            return;
+    // Escribir en el archivo de log
+    file_put_contents($logDir . '/debug.log', 
+        date('Y-m-d H:i:s') . " - PETICIÓN RECIBIDA\n" . 
+        "RAW: " . $rawData . "\n" .
+        "DATOS: " . print_r($datos ?? [], true) . "\n\n", 
+        FILE_APPEND);
+    
+    // SOLUCIÓN: Siempre usar los datos enviados, sin depender de sesiones
+    $usuario_id = $datos['usuario_id'] ?? null;
+    
+    if (!$usuario_id) {
+        echo json_encode([
+            'error' => true,
+            'msg' => 'ID de usuario no proporcionado en la petición'
+        ]);
+        return;
+    }
+    
+    try {
+        // Conexión directa a la base de datos sin ORM
+        $conn = new \mysqli($_ENV['DB_HOST'], $_ENV['DB_USER'], $_ENV['DB_PASS'], $_ENV['DB_NAME']);
+        
+        if ($conn->connect_error) {
+            throw new \Exception("Error de conexión: " . $conn->connect_error);
         }
-
-        // Validar que el usuario tenga el plan presencial
-        $usuario_id = $_SESSION['id'];
-        $registro = Registro::where('usuario_id', $usuario_id);
-
-        if(!isset($registro)) {
+        
+        // Depuración de la conexión
+        error_log("CONEXIÓN DB: Exitosa");
+        
+        // Verificar si el usuario ya está registrado
+        $usuario_id_escaped = $conn->real_escape_string((string)$usuario_id);
+        $consulta = "SELECT * FROM registros WHERE usuario_id = '{$usuario_id_escaped}' LIMIT 1";
+        error_log("SQL BUSCAR REGISTRO: " . $consulta);
+        
+        $resultado = $conn->query($consulta);
+        if (!$resultado) {
+            throw new \Exception("Error en consulta: " . $conn->error);
+        }
+        
+        if ($resultado->num_rows > 0) {
             echo json_encode([
                 'error' => true,
-                'msg' => 'Usuario no registrado'
+                'msg' => 'Ya tienes un paquete registrado. Un usuario solo puede tener un tipo de boleto.'
             ]);
             return;
         }
         
-        if($registro->paquete_id !== "1") {
+        // Verificar que el usuario existe
+        $consulta_usuario = "SELECT * FROM usuarios WHERE id = '{$usuario_id_escaped}' LIMIT 1";
+        error_log("SQL BUSCAR USUARIO: " . $consulta_usuario);
+        
+        $resultado_usuario = $conn->query($consulta_usuario);
+        if (!$resultado_usuario) {
+            throw new \Exception("Error en consulta usuario: " . $conn->error);
+        }
+        
+        if ($resultado_usuario->num_rows === 0) {
+            // Usuario no encontrado
             echo json_encode([
                 'error' => true,
-                'msg' => 'El usuario no tiene un paquete presencial'
+                'msg' => 'Usuario no encontrado. Verifica tu sesión.'
+            ]);
+            error_log("USUARIO NO ENCONTRADO CON ID: " . $usuario_id_escaped);
+            return;
+        }
+        
+        // Usuario encontrado, crear registro
+        $usuario = $resultado_usuario->fetch_assoc();
+        error_log("USUARIO ENCONTRADO: " . $usuario['email']);
+        
+        // Token único
+        $token = substr(md5(uniqid(rand(), true)), 0, 8);
+        
+        // Insertar registro usando consulta preparada
+        $stmt = $conn->prepare("INSERT INTO registros (paquete_id, pago_id, token, usuario_id) VALUES (?, ?, ?, ?)");
+        $paquete_id = 3;
+        $pago_id = 'free_' . time();
+        
+        if (!$stmt) {
+            throw new \Exception("Error preparando consulta: " . $conn->error);
+        }
+        
+        $stmt->bind_param("isss", $paquete_id, $pago_id, $token, $usuario_id_escaped);
+        $exito = $stmt->execute();
+        
+        if (!$exito) {
+            throw new \Exception("Error insertando registro: " . $stmt->error);
+        }
+        
+        // PARTE MEJORADA: Enviar correo de confirmación más consistente con otras funciones
+        // Crear asunto y mensaje para el plan gratuito
+        $asunto = 'Confirmación de Registro Plan Gratuito - DevCommit';
+        $mensaje = '<p>¡Gracias por registrarte en el plan gratuito de DevCommit!</p>';
+        $mensaje .= '<p><strong>Detalles de tu registro:</strong></p>';
+        $mensaje .= '<ul>';
+        $mensaje .= '<li>Plan: Gratuito</li>';
+        $mensaje .= '<li>Acceso: Conferencias virtuales básicas</li>';
+        $mensaje .= '<li>Token de registro: ' . $token . '</li>';
+        $mensaje .= '</ul>';
+        $mensaje .= '<p>Puedes acceder a los eventos disponibles para tu plan desde tu cuenta.</p>';
+        
+        // Enviar el correo usando la clase Email
+        error_log("Enviando email de confirmación a: " . $usuario['email']);
+        $email = new \Classes\Email(
+            $usuario['email'], 
+            $usuario['nombre'] . ' ' . ($usuario['apellido'] ?? ''), 
+            ''
+        );
+        $email->enviarConfirmacionCompra($asunto, $mensaje);
+        
+        // Si llegamos aquí, el registro fue exitoso
+        echo json_encode([
+            'error' => false,
+            'msg' => 'Te has registrado correctamente al plan gratuito',
+            'token' => $token
+        ]);
+        
+    } catch (\Throwable $e) {
+        error_log("ERROR COMPLETO: " . $e->getMessage() . "\n" . $e->getTraceAsString());
+        echo json_encode([
+            'error' => true,
+            'msg' => 'Error interno del servidor: ' . $e->getMessage()
+        ]);
+    }
+}
+
+    public static function gratisConId($usuario_id_url) {
+        if (!$usuario_id_url) {
+            echo json_encode([
+                'error' => true,
+                'msg' => 'ID de usuario no proporcionado en la URL'
             ]);
             return;
         }
-
-        if($_SERVER['REQUEST_METHOD'] === 'GET') {
-            // Obtener eventos disponibles
-            $eventos = Evento::ordenar('hora_id', 'ASC');
-
-            $eventos_formateados = [];
-            foreach($eventos as $evento) {
-                $evento->categoria = Categoria::find($evento->categoria_id);
-                $evento->dia = Dia::find($evento->dia_id);
-                $evento->hora = Hora::find($evento->hora_id);
-                $evento->ponente = Ponente::find($evento->ponente_id);
-                
-                // Convertir a formato JSON adecuado
-                $evento_formateado = [
-                    'id' => $evento->id,
-                    'nombre' => $evento->nombre,
-                    'descripcion' => $evento->descripcion,
-                    'disponibles' => $evento->disponibles,
-                    'categoria' => [
-                        'id' => $evento->categoria->id,
-                        'nombre' => $evento->categoria->nombre
-                    ],
-                    'dia' => [
-                        'id' => $evento->dia->id,
-                        'nombre' => $evento->dia->nombre
-                    ],
-                    'hora' => [
-                        'id' => $evento->hora->id,
-                        'hora' => $evento->hora->hora
-                    ],
-                    'ponente' => [
-                        'id' => $evento->ponente->id,
-                        'nombre' => $evento->ponente->nombre . ' ' . $evento->ponente->apellido,
-                        'imagen' => $evento->ponente->imagen
-                    ]
-                ];
-                
-                if($evento->dia_id === "1" && $evento->categoria_id === "1") {
-                    $eventos_formateados['conferencias_v'][] = $evento_formateado;
-                }
-
-                if($evento->dia_id === "2" && $evento->categoria_id === "1") {
-                    $eventos_formateados['conferencias_s'][] = $evento_formateado;
-                }
-
-                if($evento->dia_id === "1" && $evento->categoria_id === "2") {
-                    $eventos_formateados['workshops_v'][] = $evento_formateado;
-                }
-
-                if($evento->dia_id === "2" && $evento->categoria_id === "2") {
-                    $eventos_formateados['workshops_s'][] = $evento_formateado;
-                }
+        
+        error_log("Usando método alternativo gratisConId con ID: $usuario_id_url");
+        
+        try {
+            $conn = mysqli_connect($_ENV['DB_HOST'], $_ENV['DB_USER'], $_ENV['DB_PASS'], $_ENV['DB_NAME']);
+            
+            if (!$conn) {
+                throw new \Exception("Error de conexión: " . mysqli_connect_error());
             }
             
-            $regalos = Regalo::all('ASC');
-
-            echo json_encode([
-                'error' => false,
-                'eventos' => $eventos_formateados,
-                'regalos' => $regalos
-            ]);
-            return;
-        }
-
-        if($_SERVER['REQUEST_METHOD'] === 'POST') {
-            // Recibir datos JSON
-            $json = file_get_contents("php://input");
-            $datos = json_decode($json, true);
+            // Verificar si el usuario ya está registrado
+            $usuario_id_escaped = mysqli_real_escape_string($conn, $usuario_id_url);
+            $consulta = "SELECT * FROM registros WHERE usuario_id = '{$usuario_id_escaped}' LIMIT 1";
             
-            $eventos = $datos['eventos'] ?? [];
-            $regalo_id = $datos['regalo_id'] ?? null;
+            $resultado = mysqli_query($conn, $consulta);
             
-            if(empty($eventos)) {
+            if (mysqli_num_rows($resultado) > 0) {
                 echo json_encode([
                     'error' => true,
-                    'msg' => 'Selecciona al menos un evento'
+                    'msg' => 'Ya tienes un paquete registrado'
                 ]);
                 return;
             }
-
-            // Validar disponibilidad de eventos
-            $eventos_array = [];
-            foreach($eventos as $evento_id) {
-                $evento = Evento::find($evento_id);
-                if(!isset($evento) || $evento->disponibles === "0") {
-                    echo json_encode([
-                        'error' => true,
-                        'msg' => 'El evento seleccionado no está disponible'
-                    ]);
-                    return;
-                }
-                $eventos_array[] = $evento;
+            
+            // Verificar que el usuario existe
+            $consulta_usuario = "SELECT * FROM usuarios WHERE id = '{$usuario_id_escaped}' LIMIT 1";
+            $resultado_usuario = mysqli_query($conn, $consulta_usuario);
+            
+            if (mysqli_num_rows($resultado_usuario) === 0) {
+                echo json_encode([
+                    'error' => true,
+                    'msg' => 'Usuario no encontrado'
+                ]);
+                return;
             }
-
-            foreach($eventos_array as $evento) {
-                $evento->disponibles -= 1;
-                $evento->guardar();
-
-                // Almacenar el registro de evento
-                $datos_registro = [
-                    'evento_id' => (int) $evento->id,
-                    'registro_id' => (int) $registro->id
-                ];
-
-                $registro_usuario = new EventosRegistros($datos_registro);
-                $registro_usuario->guardar();
+            
+            // Generar token único
+            $token = substr(md5(uniqid(rand(), true)), 0, 8);
+            
+            // Insertar el registro
+            $insertar = "INSERT INTO registros (paquete_id, pago_id, token, usuario_id) 
+                        VALUES (3, 'free_" . time() . "', '{$token}', '{$usuario_id_escaped}')";
+            
+            $resultado_insertar = mysqli_query($conn, $insertar);
+            
+            if (!$resultado_insertar) {
+                throw new \Exception("Error al insertar: " . mysqli_error($conn));
             }
-
-            // Almacenar el regalo
-            $registro->sincronizar(['regalo_id' => $regalo_id]);
-            $resultado = $registro->guardar();
-
+            
             echo json_encode([
-                'error' => !$resultado,
-                'msg' => $resultado ? 'Eventos registrados correctamente' : 'Error al registrar eventos',
-                'token' => $registro->token
+                'error' => false,
+                'msg' => 'Te has registrado correctamente al plan gratuito',
+                'token' => $token
+            ]);
+            
+        } catch (\Throwable $e) {
+            echo json_encode([
+                'error' => true,
+                'msg' => 'Error: ' . $e->getMessage()
             ]);
         }
+    }
+
+    public static function verificarRegistro() {
+        // Obtener ID del usuario de múltiples fuentes
+        $json = file_get_contents("php://input");
+        $datos = json_decode($json, true);
+        
+        // Priorizar JSON, luego sesión
+        $usuario_id = $datos['usuario_id'] ?? $_SESSION['id'] ?? null;
+        
+        if(!$usuario_id) {
+            echo json_encode([
+                'error' => true,
+                'msg' => 'Usuario no identificado'
+            ]);
+            return;
+        }
+        
+        // Usar SQL directo para evitar problemas con el ORM
+        $conn = mysqli_connect($_ENV['DB_HOST'], $_ENV['DB_USER'], $_ENV['DB_PASS'], $_ENV['DB_NAME']);
+        $usuario_id_escaped = mysqli_real_escape_string($conn, (string)$usuario_id);
+        
+        $consulta = "SELECT * FROM registros WHERE usuario_id = '{$usuario_id_escaped}' LIMIT 1";
+        $resultado = mysqli_query($conn, $consulta);
+        
+        if(!$resultado) {
+            echo json_encode([
+                'error' => true,
+                'msg' => 'Error al verificar registro'
+            ]);
+            return;
+        }
+        
+        $registro = mysqli_fetch_assoc($resultado);
+        
+        echo json_encode([
+            'error' => false,
+            'registrado' => (bool) $registro,
+            'paquete_id' => $registro ? $registro['paquete_id'] : null,
+            'token' => $registro ? $registro['token'] : null,
+            'es_gratuito' => $registro && $registro['paquete_id'] == "3"
+        ]);
     }
 }

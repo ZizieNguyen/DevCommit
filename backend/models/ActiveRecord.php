@@ -91,7 +91,7 @@ class ActiveRecord {
     $atributos = $this->atributosParaDB();
     $sanitizado = [];
     foreach($atributos as $key => $value) {
-        $sanitizado[$key] = self::$db->escape_string($value);
+        $sanitizado[$key] = is_null($value) ? '' : self::$db->escape_string((string)$value);
     }
     return $sanitizado;
 }
@@ -127,10 +127,11 @@ class ActiveRecord {
 
     // Busca un registro por su id
     public static function find($id) {
-        $query = "SELECT * FROM " . static::$tabla  ." WHERE id = {$id}";
-        $resultado = self::consultarSQL($query);
-        return array_shift( $resultado ) ;
-    }
+    $id = self::$db->escape_string($id);
+    $query = "SELECT * FROM " . static::$tabla  ." WHERE id = '{$id}'";
+    $resultado = self::consultarSQL($query);
+    return array_shift($resultado);
+}
 
     // Obtener Registros con cierta cantidad
     public static function get($limite) {

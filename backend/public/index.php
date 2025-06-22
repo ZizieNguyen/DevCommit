@@ -1,8 +1,13 @@
 <?php
+
+error_log("REQUEST_URI: " . $_SERVER['REQUEST_URI']);
+error_log("REQUEST_METHOD: " . $_SERVER['REQUEST_METHOD']);
+
 // Configuración CORS para permitir peticiones desde React
 header('Access-Control-Allow-Origin: http://localhost:5173');
 header('Access-Control-Allow-Headers: Content-Type, X-Requested-With, Authorization');
 header('Access-Control-Allow-Methods: POST, GET, DELETE, PUT, OPTIONS');
+header('Access-Control-Allow-Credentials: true');
 
 // Manejar preflight OPTIONS
 if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
@@ -96,7 +101,34 @@ switch(true) {
         $id = substr($ruta, strlen('/api/eventos/'));
         require_once __DIR__ . '/../controllers/APIEventos.php';
         \Controllers\APIEventos::evento($id);
+        break;
+        
+    case $ruta ==='/api/registro/simular-pago' && $_SERVER['REQUEST_METHOD'] === 'POST':
+    require_once __DIR__ . '/../controllers/RegistroController.php';
+    \Controllers\RegistroController::simularPago();
+    break;  
+    
+    case $ruta === '/api/registro/gratis' && $_SERVER['REQUEST_METHOD'] === 'POST':
+        require_once __DIR__ . '/../controllers/RegistroController.php';
+        \Controllers\RegistroController::gratis();
+        break;
+
+    case strpos($ruta, '/api/registro/gratis/') === 0 && $_SERVER['REQUEST_METHOD'] === 'POST':
+        require_once __DIR__ . '/../controllers/RegistroController.php';
+        $usuario_id = substr($ruta, strlen('/api/registro/gratis/'));
+        \Controllers\RegistroController::gratisConId($usuario_id);
         break;    
+
+    case $ruta === '/api/registro/verificar' && $_SERVER['REQUEST_METHOD'] === 'GET':
+        require_once __DIR__ . '/../controllers/RegistroController.php';
+        \Controllers\RegistroController::verificarRegistro();
+        break;    
+
+    // Ruta para reservar un evento específico
+    case $ruta === '/api/eventos/reservar' && $_SERVER['REQUEST_METHOD'] === 'POST':
+        require_once __DIR__ . '/../controllers/RegistroController.php';
+        \Controllers\RegistroController::reservarEvento();
+        break;
 
     // API DE PONENTES
     case $ruta === '/api/ponentes' && $_SERVER['REQUEST_METHOD'] === 'GET':
