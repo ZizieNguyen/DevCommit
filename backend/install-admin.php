@@ -45,7 +45,7 @@ $resultado = $admin->guardar();
 if($resultado) {
     echo "✅ Usuario administrador creado correctamente\n";
     echo "----------------------------------------\n";
-    echo "Email: admin@devcommit.com\n";
+    echo "Email: admin@yopmail.com\n";
     echo "Password: admin123\n";
     echo "----------------------------------------\n";
     echo "Utiliza estas credenciales para acceder al panel de administración\n";
