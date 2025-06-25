@@ -1,4 +1,13 @@
 <?php
+
+if (!isset($_ENV['DB_HOST']) || !isset($_ENV['DB_USER']) || !isset($_ENV['DB_PASS']) || !isset($_ENV['DB_NAME'])) {
+    echo json_encode([
+        'error' => true,
+        'mensaje' => 'Variables de entorno no definidas correctamente'
+    ]);
+    exit;
+}
+
 $db = mysqli_connect(
     $_ENV['DB_HOST'] ?? '',
     $_ENV['DB_USER'] ?? '', 
