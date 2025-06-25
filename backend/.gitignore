@@ -20,3 +20,15 @@
 # Archivos subidos por usuarios (si aplica)
 /public/uploads/*
 !/public/uploads/.gitkeep
+
+# Dependencias PHP
+/vendor/
+
+# Archivos de almacenamiento
+/storage/uploads/*
+/storage/logs/*
+!/storage/uploads/.gitkeep
+!/storage/logs/.gitkeep
+
+# Configuración local
+/config/.env
