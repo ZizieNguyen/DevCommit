@@ -10,17 +10,12 @@ class APIPonentes {
 
     public static function inicializar() {
     // Verificar que existe la imagen por defecto - NUEVA UBICACIÓN
-    $carpeta_imagenes = __DIR__ . '/../../frontend/public/speakers';
+    $carpeta_imagenes = __DIR__ . '/public/speakers';
     $imagen_default = $carpeta_imagenes . '/default_speaker.png';
-    
-    // Crear la carpeta si no existe
-    if(!is_dir($carpeta_imagenes)) {
-        mkdir($carpeta_imagenes, 0755, true);
-    }
-    
+
     // Si no existe la imagen default, crear una básica
     if (!file_exists($imagen_default)) {
-        // Intentar copiar desde la ubicación antigua si existe
+
         $antigua_default = __DIR__ . '/../public/img/speakers/default_speaker.png';
         if(file_exists($antigua_default)) {
             copy($antigua_default, $imagen_default);

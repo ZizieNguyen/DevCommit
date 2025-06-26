@@ -4,13 +4,14 @@ error_log("REQUEST_URI: " . $_SERVER['REQUEST_URI']);
 error_log("REQUEST_METHOD: " . $_SERVER['REQUEST_METHOD']);
 
 // Configuración CORS para permitir peticiones desde React
-header('Access-Control-Allow-Origin: http://localhost:5173');
+header('Access-Control-Allow-Origin: https://devcommit.vercel.app');
 header('Access-Control-Allow-Headers: Content-Type, X-Requested-With, Authorization');
 header('Access-Control-Allow-Methods: POST, GET, DELETE, PUT, OPTIONS');
 header('Access-Control-Allow-Credentials: true');
 
 // Manejar preflight OPTIONS
 if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
+    http_response_code(200);
     exit(0);
 }
 
@@ -20,6 +21,12 @@ require_once __DIR__ . '/../config/app.php';
 // Obtener la ruta solicitada
 $ruta_completa = $_SERVER['REQUEST_URI'] ?? '/';
 $ruta = strtok($ruta_completa, '?'); 
+
+if (strpos($ruta, '/backend/public') === 0) {
+    $ruta = substr($ruta, strlen('/backend/public'));
+}
+
+error_log("Ruta original: " . $_SERVER['REQUEST_URI'] . " | Ruta procesada: " . $ruta);
 
 // Sistema de rutas manual
 switch(true) {
