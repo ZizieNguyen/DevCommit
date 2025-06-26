@@ -3,8 +3,8 @@
 error_log("REQUEST_URI: " . $_SERVER['REQUEST_URI']);
 error_log("REQUEST_METHOD: " . $_SERVER['REQUEST_METHOD']);
 
-// Configuración CORS para permitir peticiones desde React
-header('Access-Control-Allow-Origin: https://devcommit.vercel.app');
+// Configuración CORS para permitir peticiones desde React en desarrollo
+header('Access-Control-Allow-Origin: http://localhost:5173');
 header('Access-Control-Allow-Headers: Content-Type, X-Requested-With, Authorization');
 header('Access-Control-Allow-Methods: POST, GET, DELETE, PUT, OPTIONS');
 header('Access-Control-Allow-Credentials: true');
